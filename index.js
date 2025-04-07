@@ -1,7 +1,7 @@
 const rlp = require("roblox-long-polling")
 
 const poll = new rlp({
-    port: 3000,
+    port: process.env.PORT||3000,
 });
 
 var connect
