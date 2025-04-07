@@ -1,6 +1,5 @@
 const rlp = require("roblox-long-polling")
-const express = require("express")
-const app = express()
+
 const poll = new rlp({
     port: 3000,
 });
@@ -94,12 +93,3 @@ for (const file of commandFiles) {
 // Log in to Discord with your client's token
 client.login(process.env['token'])
 
-const port = 3001
-
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
-
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
