@@ -94,7 +94,7 @@ for (const file of commandFiles) {
 // Log in to Discord with your client's token
 client.login(process.env['token'])
 
-const port = 3000
+const port = 3001
 
 app.get('/', (req, res) => {
   res.send('Hello World!')
