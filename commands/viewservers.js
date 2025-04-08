@@ -10,26 +10,7 @@ module.exports = {
 
   async execute(interaction) {
     // Step 1: Fetch UUIDs from your backend
-    const res = await fetch(`${API_BASE}/uuids`);
-    const data = await res.json();
-
-    
-        const uuidList = data.uuids.join('\n'); // No shortening of UUIDs
-
-        // Step 3: Create the embed with the list of UUIDs
-        const embed = new EmbedBuilder()
-          .setColor(0x0099FF)
-          .setTitle('Active Servers')
-          .setDescription('Here are the active server UUIDs:')
-          .addFields({ name: 'UUIDs', value: uuidList });
-    
-        // Step 4: Send the embed with the list
-        
-          await interaction.reply({
-            content: '🔽 List of active servers:',
-            embeds: [embed]
-          });
-        
+    interaction.reply("Hello!")
         
     }
 
