@@ -32,21 +32,20 @@ app.post('/disconnect/:uuid', (req, res) => {
 
 app.get('/poll/:uuid', (req, res) => {
   const { uuid } = req.params;
-  const client = clients[uuid];
 
-  if (!client) {
+  if (!clients[uuid]) {
     return res.status(404).json({ error: 'UUID not found' });
   }
 
-  // Initialize the queue if not already
-  if (!client.queue) {
-    client.queue = [];
-  }
+  clients[uuid].push(res);
 
-  // Add the response to the queue
-  client.queue.push(res);
-res.send(client.queue.push)
-  // No timeout; the connection will remain open until the message is sent
+  setTimeout(() => {
+    const index = clients[uuid].indexOf(res);
+    if (index !== -1) {
+      clients[uuid].splice(index, 1);
+      res.status(204).end(); // No Content
+    }
+  }, 30000);
 });
 
 
