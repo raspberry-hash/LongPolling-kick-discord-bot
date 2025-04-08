@@ -13,12 +13,7 @@ module.exports = {
     const res = await fetch(`${API_BASE}/uuids`);
     const data = await res.json();
 
-    if (!data.uuids || data.uuids.length === 0) {
-      // Ensure interaction hasn't been acknowledged already
-      if (!interaction.replied && !interaction.deferred) {
-        return interaction.reply('❌ No active servers found.');
-      }
-    } else {
+    
         const uuidList = data.uuids.join('\n'); // No shortening of UUIDs
 
         // Step 3: Create the embed with the list of UUIDs
@@ -40,7 +35,7 @@ module.exports = {
             content: '🔽 List of active servers:',
             embeds: [embed]
           });
-        }
+        
     }
 
     // Step 2: Create the list of UUIDs to display
