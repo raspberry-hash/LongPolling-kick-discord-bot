@@ -12,9 +12,18 @@ app.post('/connect', (req, res) => {
   res.json({ uuid });
 });
 app.get('/uuids', (req, res) => {
-  const allUUIDs = Object.keys(clients);
-  res.json({ uuids: allUUIDs });
+  try {
+    const allUUIDs = Object.keys(clients);
+    if (!allUUIDs || allUUIDs.length === 0) {
+      return res.status(404).json({ error: 'No UUIDs found' });
+    }
+    res.json({ uuids: allUUIDs });
+  } catch (error) {
+    console.error('Error fetching UUIDs:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
+
 app.get('/clear-all', (req, res) => {
   // Clear the 'clients' object which holds all UUIDs and their associated responses
   for (const uuid in clients) {
