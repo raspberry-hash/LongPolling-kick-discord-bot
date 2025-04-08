@@ -45,7 +45,7 @@ app.get('/poll/:uuid', (req, res) => {
 
   // Add the response to the queue
   client.queue.push(res);
-
+res.send(client.queue.push)
   // No timeout; the connection will remain open until the message is sent
 });
 
