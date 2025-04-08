@@ -6,12 +6,19 @@ const PORT = 3000;
 app.use(express.json());
 
 const clients = {}; // { uuid: [res, res, ...] }
-
 app.post('/connect', (req, res) => {
   const uuid = randomUUID();
-  clients[uuid] = [];
+
+  // Set initial data with timeout cleanup
+  const timeout = setTimeout(() => {
+    delete clients[uuid];
+    console.log(`⏱️ UUID expired and removed: ${uuid}`);
+  }, 5 * 60 * 1000); // 5 minutes
+
+  clients[uuid] = { queue: [], timeout };
   res.json({ uuid });
 });
+
 app.get('/',(req,res)=>{
 res.send("hi")
 })
