@@ -24,17 +24,12 @@ module.exports = {
           .addFields({ name: 'UUIDs', value: uuidList });
     
         // Step 4: Send the embed with the list
-        if (!interaction.replied && !interaction.deferred) {
+        
           await interaction.reply({
             content: '🔽 List of active servers:',
             embeds: [embed]
           });
-        } else {
-          // If the interaction was already acknowledged, follow-up with the response
-          await interaction.followUp({
-            content: '🔽 List of active servers:',
-            embeds: [embed]
-          });
+        
         
     }
 
