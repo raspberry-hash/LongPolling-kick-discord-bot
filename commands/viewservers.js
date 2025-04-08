@@ -33,7 +33,7 @@ module.exports = {
 
     // Step 4: Send the embed with the list
     await interaction.editReply({
-      content: '🔽 List of active servers:',
+      content: '🔽 List of active servers: a',
       embeds: [embed]
     });
   }
