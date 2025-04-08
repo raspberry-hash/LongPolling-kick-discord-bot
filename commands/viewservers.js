@@ -14,7 +14,7 @@ module.exports = {
       const res = await fetch(`${API_BASE}/uuids`);
       const embed1 = new EmbedBuilder()
         .setColor(0x0099FF)
-        .setTitle('❌No active servers found')
+        .setTitle('❌ No active servers found')
       // Step 2: Check if the response is valid
       if (!res.ok) {
         
