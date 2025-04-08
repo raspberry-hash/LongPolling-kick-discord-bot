@@ -29,4 +29,12 @@ module.exports = {
       new StringSelectMenuBuilder()
         .setCustomId('select_server')
         .setPlaceholder('Choose a server UUID...')
-        .addOptions(options
+        .addOptions(options)
+    );
+
+    await interaction.editReply({
+      content: '🔽 Select a server to view info:',
+      components: [row]
+    });
+  }
+};
