@@ -6,7 +6,7 @@ const PORT = 3000;
 app.use(express.json());
 
 const clients = {}; // { uuid: [res, res, ...] }
-app.get('/connect', (req, res) => {
+app.post('/connect', (req, res) => {
   const uuid = randomUUID();
   clients[uuid] = [];
   res.json({ uuid });
