@@ -19,7 +19,7 @@ app.get('/uuids', (req, res) => {
 app.get('/',(req,res)=>{
 res.send("hi")
 })
-app.post('/disconnect/:uuid', (req, res) => {
+app.get('/disconnect/:uuid', (req, res) => {
   const { uuid } = req.params;
   if (clients[uuid]) {
    
