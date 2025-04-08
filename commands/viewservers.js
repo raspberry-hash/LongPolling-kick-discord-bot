@@ -16,9 +16,6 @@ module.exports = {
         .setColor(0x0099FF)
         .setTitle('Error!')
         .setDescription('❌No active servers found')
-        .addFields(
-          { name: 'UUIDs', value: "```"+data.uuids.join('\n')+"```", inline: false }
-        )
         .setFooter({ text: 'this took 30 fucking minutes' });
       // Step 2: Check if the response is valid
       if (!res.ok) {
