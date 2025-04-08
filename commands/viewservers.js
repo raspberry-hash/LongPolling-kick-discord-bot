@@ -31,9 +31,9 @@ module.exports = {
         .setTitle('Active Server UUIDs')
         .setDescription('Here are the active server UUIDs:')
         .addFields(
-          { name: 'UUIDs', value: data.uuids.join('\n'), inline: false }
+          { name: 'UUIDs', value: "```"+data.uuids.join('\n')+"```", inline: false }
         )
-        .setFooter({ text: 'Click here for more details or help!' });
+        .setFooter({ text: 'this took 30 fucking minutes' });
 
       // Step 5: Send the embed as the reply
       return interaction.reply({ embeds: [embed] });
