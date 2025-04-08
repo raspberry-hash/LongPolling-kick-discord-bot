@@ -25,7 +25,7 @@ res.send("hi")
 app.post('/disconnect/:uuid', (req, res) => {
   const { uuid } = req.params;
   if (clients[uuid]) {
-    clearTimeout(clients[uuid].timeout);
+   
     delete clients[uuid];
     res.send(`UUID ${uuid} disconnected`);
   } else {
@@ -45,13 +45,7 @@ app.get('/poll/:uuid', (req, res) => {
   
   client.queue.push(res);
 
-  setTimeout(() => {
-    const index = client.queue.indexOf(res);
-    if (index !== -1) {
-      client.queue.splice(index, 1);
-      res.status(204).end();
-    }
-  }, 30000);
+ 
 });
 
 app.post('/send/:uuid', (req, res) => {
