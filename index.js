@@ -12,7 +12,9 @@ app.post('/connect', (req, res) => {
   clients[uuid] = []; // Initialize the client's queue
   res.json({ uuid });
 });
-
+app.get('/',(req,res)=>{
+res.send("Hola!")
+});
 app.get('/poll/:uuid', (req, res) => {
   const { uuid } = req.params;
 
