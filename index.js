@@ -18,6 +18,10 @@ app.post('/connect', (req, res) => {
   clients[uuid] = { queue: [], timeout };
   res.json({ uuid });
 });
+app.get('/uuids', (req, res) => {
+  const allUUIDs = Object.keys(clients);
+  res.json({ uuids: allUUIDs });
+});
 
 app.get('/',(req,res)=>{
 res.send("hi")
