@@ -12,17 +12,27 @@ module.exports = {
     try {
       // Step 1: Fetch UUIDs from your backend
       const res = await fetch(`${API_BASE}/uuids`);
-      
+      const embed1 = new EmbedBuilder()
+        .setColor(0x0099FF)
+        .setTitle('Error!')
+        .setDescription('❌No active servers found')
+        .addFields(
+          { name: 'UUIDs', value: "```"+data.uuids.join('\n')+"```", inline: false }
+        )
+        .setFooter({ text: 'this took 30 fucking minutes' });
       // Step 2: Check if the response is valid
       if (!res.ok) {
-        return interaction.reply('❌ Failed to fetch server UUIDs.');
+        
+
+      // Step 5: Send the embed as the reply
+      return interaction.reply({ embeds: [embed1] });
       }
 
       const data = await res.json();
 
       // Step 3: Check if data contains UUIDs
       if (!data.uuids || data.uuids.length === 0) {
-        return interaction.reply('❌ No active servers found.');
+        return interaction.reply({ embeds: [embed1] });
       }
 
       // Step 4: Create the embed with the list of UUIDs
