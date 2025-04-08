@@ -14,9 +14,7 @@ module.exports = {
       const res = await fetch(`${API_BASE}/uuids`);
       const embed1 = new EmbedBuilder()
         .setColor(0x0099FF)
-        .setTitle('Error!')
-        .setDescription('❌No active servers found')
-        .setFooter({ text: 'this took 30 fucking minutes' });
+        .setTitle('❌No active servers found')
       // Step 2: Check if the response is valid
       if (!res.ok) {
         
@@ -40,7 +38,7 @@ module.exports = {
         .addFields(
           { name: 'UUIDs', value: "```"+data.uuids.join('\n')+"```", inline: false }
         )
-        .setFooter({ text: 'this took 30 fucking minutes' });
+
 
       // Step 5: Send the embed as the reply
       return interaction.reply({ embeds: [embed] });
