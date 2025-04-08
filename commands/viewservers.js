@@ -15,7 +15,7 @@ module.exports = {
       const embed1 = new EmbedBuilder()
         .setColor(0x0099FF)
         .setTitle('Error!')
-        .setDescription('❌ No active servers found')
+        .setDescription('❌ Unable to grab server count!')
       // Step 2: Check if the response is valid
       if (!res.ok) {
         
@@ -35,7 +35,7 @@ module.exports = {
       const embed = new EmbedBuilder()
         .setColor(0x0099FF)
         .setTitle('Active Server UUIDs')
-        .setDescription('**${data.uuids.length}** active server(s) found!')
+        .setDescription(`**${data.uuids.length}** active server(s) found!`)
         .addFields(
           { name: 'UUIDs', value: "```"+data.uuids.join('\n')+"```", inline: false }
         )
