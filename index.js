@@ -6,12 +6,9 @@ const PORT = 3000;
 app.use(express.json());
 
 const clients = {}; // { uuid: [res, res, ...] }
-app.post('/connect', (req, res) => {
+app.get('/connect', (req, res) => {
   const uuid = randomUUID();
-
-  // Set initial data with timeout cleanup
-  
-  clients[uuid] = { queue: [], timeout };
+  clients[uuid] = [];
   res.json({ uuid });
 });
 app.get('/uuids', (req, res) => {
