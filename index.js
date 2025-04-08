@@ -9,17 +9,17 @@ const clients = {}; // { uuid: [res, res, ...] }
 
 app.post('/connect', (req, res) => {
   const uuid = randomUUID();
-  clients[uuid] = []; // Initialize the client's queue
+  clients[uuid] = [];
   res.json({ uuid });
 });
 app.get('/',(req,res)=>{
-res.send("Hola!")
-});
+res.send("hi")
+})
 app.get('/poll/:uuid', (req, res) => {
   const { uuid } = req.params;
 
   if (!clients[uuid]) {
-    return res.status(404).json({ error: 'UUID not found. Please reconnect.' });
+    return res.status(404).json({ error: 'UUID not found' });
   }
 
   clients[uuid].push(res);
@@ -44,10 +44,10 @@ app.post('/send/:uuid', (req, res) => {
     clients[uuid] = [];
     res.send(`Message sent to ${uuid}`);
   } else {
-    res.status(404).send(`No clients waiting for UUID: ${uuid}`);
+    res.status(404).send(`No waiting clients for UUID: ${uuid}`);
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`✅ Server running on http://localhost:${PORT}`);
 });
