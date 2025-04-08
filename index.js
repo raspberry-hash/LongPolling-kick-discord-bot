@@ -24,18 +24,26 @@ res.send("hi")
 })
 app.get('/poll/:uuid', (req, res) => {
   const { uuid } = req.params;
+  const client = clients[uuid];
 
-  if (!clients[uuid]) {
+  if (!client) {
     return res.status(404).json({ error: 'UUID not found' });
   }
 
-  clients[uuid].push(res);
+  // Reset inactivity timer
+  clearTimeout(client.timeout);
+  client.timeout = setTimeout(() => {
+    delete clients[uuid];
+    console.log(`⏱️ UUID expired and removed: ${uuid}`);
+  }, 5 * 60 * 1000); // Reset 5 minutes
+
+  client.queue.push(res);
 
   setTimeout(() => {
-    const index = clients[uuid].indexOf(res);
+    const index = client.queue.indexOf(res);
     if (index !== -1) {
-      clients[uuid].splice(index, 1);
-      res.status(204).end(); // No Content
+      client.queue.splice(index, 1);
+      res.status(204).end();
     }
   }, 30000);
 });
