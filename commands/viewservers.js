@@ -9,14 +9,13 @@ module.exports = {
     .setDescription('View a list of server UUIDs'),
 
   async execute(interaction) {
-    await interaction.deferReply();
 
     // Step 1: Fetch UUIDs from your backend
     const res = await fetch(`${API_BASE}/uuids`);
     const data = await res.json();
 
     if (!data.uuids || data.uuids.length === 0) {
-      return interaction.editReply('❌ No active servers found nerd.');
+      return interaction.reply('❌ No active servers found.');
     }
 
     // Step 2: Create the list of UUIDs to display
@@ -32,8 +31,8 @@ module.exports = {
       .addFields({ name: 'UUIDs', value: uuidList });
 
     // Step 4: Send the embed with the list
-    await interaction.editReply({
-      content: '🔽 List of active servers: a',
+    await interaction.reply({
+      content: '🔽 List of active servers for u:',
       embeds: [embed]
     });
   }
