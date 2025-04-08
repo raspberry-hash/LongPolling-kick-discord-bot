@@ -1,13 +1,12 @@
-const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
-
 
 const API_BASE = 'https://longpolling-kick-discord-bot-production.up.railway.app';
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('viewservers')
-    .setDescription('Select a server UUID to view info'),
+    .setDescription('View a list of server UUIDs'),
 
   async execute(interaction) {
     await interaction.deferReply();
@@ -20,22 +19,22 @@ module.exports = {
       return interaction.editReply('❌ No active servers found.');
     }
 
-    // Step 2: Build the dropdown (max 25 options)
-    const options = data.uuids.slice(0, 25).map(uuid => ({
-      label: uuid.slice(0, 10) + '...', // short label
-      value: uuid
-    }));
+    // Step 2: Create the list of UUIDs to display
+    const uuidList = data.uuids.map((uuid, index) => {
+      return `\`\`\`${index + 1}.** ${uuid.slice(0, 10)}...\`\`\``; // Show a shortened UUID (first 10 chars)
+    }).join('\n');
 
-    const row = new ActionRowBuilder().addComponents(
-      new StringSelectMenuBuilder()
-        .setCustomId('select_server')
-        .setPlaceholder('Choose a server UUID...')
-        .addOptions(options)
-    );
+    // Step 3: Create the embed with the list of UUIDs
+    const embed = new EmbedBuilder()
+      .setColor(0x0099FF)
+      .setTitle('Active Servers')
+      .setDescription('Here are the active server UUIDs:')
+      .addFields({ name: 'UUIDs', value: uuidList });
 
+    // Step 4: Send the embed with the list
     await interaction.editReply({
-      content: '🔽 Select a server to view info:',
-      components: [row]
+      content: '🔽 List of active servers:',
+      embeds: [embed]
     });
   }
 };
