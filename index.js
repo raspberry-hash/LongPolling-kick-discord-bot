@@ -26,6 +26,17 @@ app.get('/uuids', (req, res) => {
 app.get('/',(req,res)=>{
 res.send("hi")
 })
+app.post('/disconnect/:uuid', (req, res) => {
+  const { uuid } = req.params;
+  if (clients[uuid]) {
+    clearTimeout(clients[uuid].timeout);
+    delete clients[uuid];
+    res.send(`UUID ${uuid} disconnected`);
+  } else {
+    res.status(404).send("UUID not found");
+  }
+});
+
 app.get('/poll/:uuid', (req, res) => {
   const { uuid } = req.params;
   const client = clients[uuid];
