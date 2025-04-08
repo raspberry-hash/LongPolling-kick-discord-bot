@@ -10,11 +10,7 @@ app.post('/connect', (req, res) => {
   const uuid = randomUUID();
 
   // Set initial data with timeout cleanup
-  const timeout = setTimeout(() => {
-    delete clients[uuid];
-    console.log(`⏱️ UUID expired and removed: ${uuid}`);
-  }, 5 * 60 * 1000); // 5 minutes
-
+  
   clients[uuid] = { queue: [], timeout };
   res.json({ uuid });
 });
@@ -46,12 +42,7 @@ app.get('/poll/:uuid', (req, res) => {
   }
 
   // Reset inactivity timer
-  clearTimeout(client.timeout);
-  client.timeout = setTimeout(() => {
-    delete clients[uuid];
-    console.log(`⏱️ UUID expired and removed: ${uuid}`);
-  }, 5 * 60 * 1000); // Reset 5 minutes
-
+  
   client.queue.push(res);
 
   setTimeout(() => {
