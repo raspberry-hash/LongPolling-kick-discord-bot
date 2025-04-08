@@ -14,10 +14,11 @@ module.exports = {
     const data = await res.json();
 
     if (!data.uuids || data.uuids.length === 0) {
-      // Ensure interaction hasn't been acknowledged already
+      // If no UUIDs found, reply if not already acknowledged
       if (!interaction.replied && !interaction.deferred) {
         return interaction.reply('❌ No active servers found.');
       }
+      return; // Don't do anything if already acknowledged
     }
 
     // Step 2: Create the list of UUIDs to display
@@ -37,11 +38,15 @@ module.exports = {
         embeds: [embed]
       });
     } else {
-      // If the interaction was already acknowledged, follow-up with the response
-      await interaction.followUp({
-        content: '🔽 List of active servers:',
-        embeds: [embed]
-      });
+      // If already acknowledged, use followUp
+      try {
+        await interaction.followUp({
+          content: '🔽 List of active servers:',
+          embeds: [embed]
+        });
+      } catch (err) {
+        console.error('Error during follow-up:', err);
+      }
     }
   }
 };
