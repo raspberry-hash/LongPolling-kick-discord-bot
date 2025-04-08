@@ -15,6 +15,18 @@ app.get('/uuids', (req, res) => {
   const allUUIDs = Object.keys(clients);
   res.json({ uuids: allUUIDs });
 });
+app.get('/clear-all', (req, res) => {
+  // Clear the 'clients' object which holds all UUIDs and their associated responses
+  for (const uuid in clients) {
+    if (clients[uuid]) {
+      clients[uuid].forEach(clientRes => {
+        clientRes.status(410).json({ error: 'Connection closed' });
+      });
+      delete clients[uuid];  // Remove the UUID from the clients list
+    }
+  }
+  res.send("All UUIDs have been cleared.");
+});
 
 app.get('/',(req,res)=>{
 res.send("hi")
