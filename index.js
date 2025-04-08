@@ -38,12 +38,17 @@ app.get('/poll/:uuid', (req, res) => {
     return res.status(404).json({ error: 'UUID not found' });
   }
 
-  // Reset inactivity timer
-  
+  // Initialize the queue if not already
+  if (!client.queue) {
+    client.queue = [];
+  }
+
+  // Add the response to the queue
   client.queue.push(res);
 
- 
+  // No timeout; the connection will remain open until the message is sent
 });
+
 
 app.post('/send/:uuid', (req, res) => {
   const { uuid } = req.params;
