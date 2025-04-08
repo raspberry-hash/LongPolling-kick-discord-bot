@@ -16,7 +16,7 @@ module.exports = {
     const data = await res.json();
 
     if (!data.uuids || data.uuids.length === 0) {
-      return interaction.editReply('❌ No active servers found.');
+      return interaction.editReply('❌ No active servers found nerd.');
     }
 
     // Step 2: Create the list of UUIDs to display
