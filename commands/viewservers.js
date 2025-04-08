@@ -21,7 +21,7 @@ module.exports = {
 
     // Step 2: Create the list of UUIDs to display
     const uuidList = data.uuids.map((uuid, index) => {
-      return `\`\`\`${index + 1}.** ${uuid.slice(0, 10)}...\`\`\``; // Show a shortened UUID (first 10 chars)
+      return `\`\`\`${index + 1}\`\`\``; // Show a shortened UUID (first 10 chars)
     }).join('\n');
 
     // Step 3: Create the embed with the list of UUIDs
