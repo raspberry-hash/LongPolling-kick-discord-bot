@@ -110,3 +110,4 @@ app.post('/send/:uuid', (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
 });
+client.login(process.env['token'])
