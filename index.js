@@ -95,7 +95,7 @@ app.get('/poll/:uuid', (req, res) => {
     processQueue(uuid);
   }
 
-  res.send(`Poll request queued for UUID: ${uuid}`);
+  // No immediate response, we let the queue handle the actual response.
 });
 
 // Send message to all waiting clients for the given UUID
