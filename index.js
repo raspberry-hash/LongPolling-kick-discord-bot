@@ -123,10 +123,12 @@ const GUILD_ID = process.env['guildId'];
 app.post('/updateCommands', async (req, res) => {
   const data = req.body;
 
+  // Check if the input is an array
   if (!Array.isArray(data)) {
     return res.status(400).json({ error: 'Input must be an array of command objects' });
   }
 
+  // Map the incoming data to the expected command structure
   const commands = data.map(cmd => ({
     name: cmd.Name.toLowerCase(),
     description: cmd.Description,
@@ -136,15 +138,31 @@ app.post('/updateCommands', async (req, res) => {
   const rest = new REST({ version: '10' }).setToken(TOKEN);
 
   try {
+    // Attempt to register the commands with Discord's API
     const result = await rest.put(
       Routes.applicationGuildCommands(APP_ID, GUILD_ID),
       { body: commands }
     );
 
+    // Log success and respond to the client
     console.log('✅ Slash commands registered:', result.map(r => r.name));
     res.json({ success: true, registered: result.map(r => r.name) });
   } catch (error) {
+    // Log the detailed error and send the response to the client
     console.error('❌ Error registering commands:', error);
+    console.error('Error Details:', error.response ? error.response.body : error.message);
+
+    // If the error contains a response object, provide more detailed error info
+    if (error.response) {
+      return res.status(500).json({
+        error: {
+          message: error.message,
+          details: error.response.body
+        }
+      });
+    }
+
+    // Fallback for general errors
     res.status(500).json({ error: error.message });
   }
 });
