@@ -82,10 +82,13 @@ app.get('/poll/:uuid', (req, res) => {
 
     // Set a timeout for handling the client response
     setTimeout(() => {
-      const index = clients[uuid].indexOf(res);
-      if (index !== -1) {
-        clients[uuid].splice(index, 1); // Remove client from the list after timeout
-        res.status(204).end(); // No Content
+      // Ensure that clients[uuid] is defined and has entries before proceeding
+      if (clients[uuid]) {
+        const index = clients[uuid].indexOf(res);
+        if (index !== -1) {
+          clients[uuid].splice(index, 1); // Remove client from the list after timeout
+          res.status(204).end(); // No Content
+        }
       }
     }, 30000); // Timeout after 30 seconds if no response
   });
