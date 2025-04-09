@@ -2,7 +2,7 @@ const express = require('express');
 const { randomUUID } = require('crypto');
 const fs = require('node:fs');
 const path = require('node:path');
-const { Client, Collection, Events, GatewayIntentBits } = require('discord.js');
+const { Client, Collection, Events, GatewayIntentBits, REST, Routes } = require('discord.js');
 
 const app = express();
 const PORT = 3000;
@@ -10,20 +10,19 @@ const PORT = 3000;
 app.use(express.json());
 
 const clients = {}; // { uuid: [res, res, ...] }
-const queues = {};  // Queue system: { uuid: Promise[] }
+const queues = {};  // { uuid: Promise[] }
 
-// Function to process queue items sequentially
 const processQueue = async (uuid) => {
   while (queues[uuid] && queues[uuid].length > 0) {
-    const nextCommand = queues[uuid].shift(); // Get the next command
-    await nextCommand(); // Process it
+    const nextCommand = queues[uuid].shift();
+    await nextCommand();
   }
 };
 
 app.post('/connect', (req, res) => {
   const uuid = randomUUID();
   clients[uuid] = [];
-  queues[uuid] = [];  // Initialize an empty queue for this UUID
+  queues[uuid] = [];
   res.json({ uuid });
 });
 
@@ -48,27 +47,26 @@ app.get('/clear-all', (req, res) => {
       });
       delete clients[uuid];
     }
-    delete queues[uuid];  // Clear the queue for the UUID
+    delete queues[uuid];
   }
   res.send("All UUIDs have been cleared.");
 });
 
 app.get('/', (req, res) => {
-  res.send("hi")
+  res.send("hi");
 });
 
 app.get('/disconnect/:uuid', (req, res) => {
   const { uuid } = req.params;
   if (clients[uuid]) {
     delete clients[uuid];
-    delete queues[uuid];  // Remove the queue when disconnecting
+    delete queues[uuid];
     res.send(`UUID ${uuid} disconnected`);
   } else {
     res.status(404).send("UUID not found");
   }
 });
 
-// Queue the poll request and process it sequentially
 app.get('/poll/:uuid', (req, res) => {
   const { uuid } = req.params;
 
@@ -76,32 +74,25 @@ app.get('/poll/:uuid', (req, res) => {
     return res.status(404).json({ error: 'UUID not found' });
   }
 
-  // Add the poll request to the queue for this UUID
   queues[uuid].push(async () => {
-    clients[uuid].push(res); // Add the response to the list of waiting clients
+    clients[uuid].push(res);
 
-    // Set a timeout for handling the client response
     setTimeout(() => {
-      // Ensure that clients[uuid] is defined and has entries before proceeding
       if (clients[uuid]) {
         const index = clients[uuid].indexOf(res);
         if (index !== -1) {
-          clients[uuid].splice(index, 1); // Remove client from the list after timeout
-          res.status(204).end(); // No Content
+          clients[uuid].splice(index, 1);
+          res.status(204).end();
         }
       }
-    }, 30000); // Timeout after 30 seconds if no response
+    }, 30000);
   });
 
-  // Process the queue if it's not already processing
   if (queues[uuid].length === 1) {
     processQueue(uuid);
   }
-
-  // No immediate response, we let the queue handle the actual response.
 });
 
-// Send message to all waiting clients for the given UUID
 app.post('/send/:uuid', (req, res) => {
   const { uuid } = req.params;
   const message = req.body.message || "Default message";
@@ -110,16 +101,13 @@ app.post('/send/:uuid', (req, res) => {
     return res.status(404).send(`No waiting clients for UUID: ${uuid}`);
   }
 
-  // Add the command to the queue for processing
   queues[uuid].push(async () => {
-    // Process the send operation
     clients[uuid].forEach(clientRes => {
       clientRes.json({ message });
     });
-    clients[uuid] = []; // Clear the clients once the message is sent
+    clients[uuid] = [];
   });
 
-  // Process the queue if it's not already processing
   if (queues[uuid].length === 1) {
     processQueue(uuid);
   }
@@ -127,18 +115,49 @@ app.post('/send/:uuid', (req, res) => {
   res.send(`Message queued for UUID: ${uuid}`);
 });
 
-app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
+// Slash command registration via POST
+const TOKEN = process.env['token'];
+const APP_ID = process.env['appId'];
+const GUILD_ID = process.env['guildId'];
+
+app.post('/updateCommands', async (req, res) => {
+  const data = req.body;
+
+  if (!data.Name || !data.Description) {
+    return res.status(400).json({ error: 'Missing Name or Description' });
+  }
+
+  const commands = [
+    {
+      name: data.Name.toLowerCase(),
+      description: data.Description,
+      type: 1
+    }
+  ];
+
+  const rest = new REST({ version: '10' }).setToken(TOKEN);
+
+  try {
+    const result = await rest.put(
+      Routes.applicationGuildCommands(APP_ID, GUILD_ID),
+      { body: commands }
+    );
+
+    console.log('🔁 Slash command(s) updated:', result);
+    res.json({ success: true, commands: result });
+  } catch (error) {
+    console.error('❌ Error registering command:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
-// Discord bot code
-// Create a new client instance
+// Discord bot setup
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
-// When the client is ready, run this code (only once)
 client.once(Events.ClientReady, c => {
   console.log(`Ready! Logged in as ${c.user.tag}`);
 });
+
 client.commands = new Collection();
 
 client.on(Events.InteractionCreate, async interaction => {
@@ -163,14 +182,13 @@ client.on(Events.InteractionCreate, async interaction => {
   }
 });
 
-// Dynamically load commands from the "commands" folder
+// Load command files dynamically
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
   const filePath = path.join(commandsPath, file);
   const command = require(filePath);
-  // Set a new item in the Collection with the key as the command name and the value as the exported module
   if ('data' in command && 'execute' in command) {
     client.commands.set(command.data.name, command);
   } else {
@@ -178,5 +196,8 @@ for (const file of commandFiles) {
   }
 }
 
-// Log in to Discord with your client's token
-client.login(process.env['token']);
+// Start server and login bot
+app.listen(PORT, () => {
+  console.log(`✅ Express server running on http://localhost:${PORT}`);
+});
+client.login(TOKEN);
