@@ -106,8 +106,8 @@ app.post('/send/:uuid', (req, res) => {
 
   res.send(`Message queued for UUID: ${uuid}`);
 });
-
+client.login(process.env['token'])
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
 });
-client.login(process.env['token'])
+
