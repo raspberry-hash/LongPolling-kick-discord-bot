@@ -123,17 +123,15 @@ const GUILD_ID = process.env['guildId'];
 app.post('/updateCommands', async (req, res) => {
   const data = req.body;
 
-  if (!data.Name || !data.Description) {
-    return res.status(400).json({ error: 'Missing Name or Description' });
+  if (!Array.isArray(data)) {
+    return res.status(400).json({ error: 'Input must be an array of command objects' });
   }
 
-  const commands = [
-    {
-      name: data.Name.toLowerCase(),
-      description: data.Description,
-      type: 1
-    }
-  ];
+  const commands = data.map(cmd => ({
+    name: cmd.Name.toLowerCase(),
+    description: cmd.Description,
+    type: cmd.Type || 1
+  }));
 
   const rest = new REST({ version: '10' }).setToken(TOKEN);
 
@@ -143,13 +141,14 @@ app.post('/updateCommands', async (req, res) => {
       { body: commands }
     );
 
-    console.log('🔁 Slash command(s) updated:', result);
-    res.json({ success: true, commands: result });
+    console.log('✅ Slash commands registered:', result.map(r => r.name));
+    res.json({ success: true, registered: result.map(r => r.name) });
   } catch (error) {
-    console.error('❌ Error registering command:', error);
+    console.error('❌ Error registering commands:', error);
     res.status(500).json({ error: error.message });
   }
 });
+
 
 // Discord bot setup
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
