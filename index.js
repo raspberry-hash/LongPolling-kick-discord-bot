@@ -120,7 +120,13 @@ const TOKEN = process.env['token'];
 const APP_ID = process.env['appId'];
 const GUILD_ID = process.env['guildId'];
 
+let commandsRegistered = false;  // Track if commands are already registered
+
 app.post('/updateCommands', async (req, res) => {
+    if (commandsRegistered) {
+    return res.status(403).json({ error: 'Commands already registered. This route can only be called once.' });
+  }
+  
   const data = req.body;
 
   // Check if the input is an array
@@ -146,6 +152,7 @@ app.post('/updateCommands', async (req, res) => {
 
     // Log success and respond to the client
     console.log('✅ Slash commands registered:', result.map(r => r.name));
+    commandsRegistered = true;  // Mark that commands have been registered
     res.json({ success: true, registered: result.map(r => r.name) });
   } catch (error) {
     // Log the detailed error and send the response to the client
