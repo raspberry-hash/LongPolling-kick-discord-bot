@@ -2,7 +2,7 @@ const express = require('express');
 const { randomUUID } = require('crypto');
 const fs = require('node:fs');
 const path = require('node:path');
-const { Client, Collection, Events, GatewayIntentBits, REST, Routes, ActivityType } = require('discord.js');
+const { Client, Collection, Events, GatewayIntentBits, REST, Routes, ActivityType, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
 
 const app = express();
 const PORT = 3000;
@@ -200,42 +200,64 @@ setInterval(updateBotStatus, 60000);
 
 client.commands = new Collection();
 
-
 client.on(Events.InteractionCreate, async interaction => {
-    if (!interaction.isCommand()) return;
-  
-    const command = interaction.client.commands.get(interaction.commandName);
-  
-    // Check if the command has an execute function
-    if (!command || !command.execute) {
-      console.log(`Handling manual response for command: ${interaction.commandName}`);
-      
-      try {
-        await interaction.deferReply({ ephemeral: false });
-  
-        await interaction.followUp({
-          content: `This command is registered via HTTP`,
-        });
-      } catch (error) {
-        console.error('Error handling interaction without execute:', error);
-        await interaction.followUp({
-          content: 'There was an error processing your command. Please try again later.',
-          ephemeral: true,
-        });
-      }
-    } else {
-      // Normal command execution (for built-in commands)
-      try {
-        await command.execute(interaction);
-      } catch (error) {
-        console.error('Error executing command:', error);
-        await interaction.reply({
-          content: 'There was an error executing this command!',
-          ephemeral: true,
+  if (!interaction.isCommand()) return;
+
+  const command = interaction.client.commands.get(interaction.commandName);
+
+  if (!command || !command.execute) {
+    console.log(`Handling manual response for command: ${interaction.commandName}`);
+
+    try {
+      await interaction.deferReply({ ephemeral: false });
+
+      // Generate UUID options dynamically
+      const uuidOptions = Object.keys(clients).map(uuid => 
+        new StringSelectMenuOptionBuilder()
+          .setLabel(`UUID: ${uuid.substring(0, 8)}...`) // short label
+          .setDescription(`Send to UUID: ${uuid}`)
+          .setValue(uuid)
+      );
+
+      if (uuidOptions.length === 0) {
+        return await interaction.followUp({
+          content: '⚠️ No active UUIDs found.',
+          ephemeral: true
         });
       }
+
+      const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId(`http_uuid_select_${interaction.commandName}`)
+        .setPlaceholder('Select a UUID to send the command to')
+        .addOptions(uuidOptions.slice(0, 25)); // Max 25 options per menu
+
+      const row = new ActionRowBuilder().addComponents(selectMenu);
+
+      await interaction.followUp({
+        content: `This command was registered via HTTP. Select a UUID to dispatch it to:`,
+        components: [row]
+      });
+
+    } catch (error) {
+      console.error('Error handling manual dropdown:', error);
+      await interaction.followUp({
+        content: 'There was an error processing your command.',
+        ephemeral: true,
+      });
     }
-  });
+  } else {
+    try {
+      await command.execute(interaction);
+    } catch (error) {
+      console.error('Error executing command:', error);
+      await interaction.reply({
+        content: 'There was an error executing this command!',
+        ephemeral: true,
+      });
+    }
+  }
+});
+
 
 // Load command files dynamically
 const commandsPath = path.join(__dirname, 'commands');
