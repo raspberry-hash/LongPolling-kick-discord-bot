@@ -2,7 +2,7 @@ const express = require('express');
 const { randomUUID } = require('crypto');
 const fs = require('node:fs');
 const path = require('node:path');
-const { Client, Collection, Events, GatewayIntentBits, REST, Routes, ActivityType, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
+const { Client, Collection, Events, GatewayIntentBits, REST, Routes, ActivityType, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, Events } = require('discord.js');
 
 const app = express();
 const PORT = 3000;
@@ -201,63 +201,91 @@ setInterval(updateBotStatus, 60000);
 client.commands = new Collection();
 
 client.on(Events.InteractionCreate, async interaction => {
-  if (!interaction.isCommand()) return;
+  // Handle slash command
+  if (interaction.isChatInputCommand()) {
+    const command = interaction.client.commands.get(interaction.commandName);
 
-  const command = interaction.client.commands.get(interaction.commandName);
+    if (!command || !command.execute) {
+      console.log(`Handling manual response for command: ${interaction.commandName}`);
 
-  if (!command || !command.execute) {
-    console.log(`Handling manual response for command: ${interaction.commandName}`);
+      try {
+        await interaction.deferReply({ ephemeral: false });
 
-    try {
-      await interaction.deferReply({ ephemeral: false });
+        const uuidOptions = Object.keys(clients).map(uuid =>
+          new StringSelectMenuOptionBuilder()
+            .setLabel(`UUID: ${uuid.slice(0, 8)}...`)
+            .setDescription(`Send to UUID: ${uuid}`)
+            .setValue(uuid)
+        );
 
-      // Generate UUID options dynamically
-      const uuidOptions = Object.keys(clients).map(uuid => 
-        new StringSelectMenuOptionBuilder()
-          .setLabel(`UUID: ${uuid.substring(0, 8)}...`) // short label
-          .setDescription(`Send to UUID: ${uuid}`)
-          .setValue(uuid)
-      );
+        if (uuidOptions.length === 0) {
+          return await interaction.followUp({
+            content: '⚠️ No active UUIDs found.',
+            ephemeral: true
+          });
+        }
 
-      if (uuidOptions.length === 0) {
-        return await interaction.followUp({
-          content: '⚠️ No active UUIDs found.',
+        const selectMenu = new StringSelectMenuBuilder()
+          .setCustomId(`http_uuid_select_${interaction.commandName}`)
+          .setPlaceholder('Select a UUID to send the command to')
+          .addOptions(uuidOptions.slice(0, 25)); // Max 25 options
+
+        const row = new ActionRowBuilder().addComponents(selectMenu);
+
+        await interaction.followUp({
+          content: `This command was registered via HTTP. Select a UUID to dispatch it to:`,
+          components: [row]
+        });
+
+      } catch (error) {
+        console.error('Error handling interaction without execute:', error);
+        await interaction.followUp({
+          content: 'There was an error processing your command. Please try again later.',
           ephemeral: true
         });
       }
 
-      const selectMenu = new StringSelectMenuBuilder()
-        .setCustomId(`http_uuid_select_${interaction.commandName}`)
-        .setPlaceholder('Select a UUID to send the command to')
-        .addOptions(uuidOptions.slice(0, 25)); // Max 25 options per menu
-
-      const row = new ActionRowBuilder().addComponents(selectMenu);
-
-      await interaction.followUp({
-        content: `This command was registered via HTTP. Select a UUID to dispatch it to:`,
-        components: [row]
-      });
-
-    } catch (error) {
-      console.error('Error handling manual dropdown:', error);
-      await interaction.followUp({
-        content: 'There was an error processing your command.',
-        ephemeral: true,
-      });
+    } else {
+      try {
+        await command.execute(interaction);
+      } catch (error) {
+        console.error('Error executing command:', error);
+        await interaction.reply({
+          content: 'There was an error executing this command!',
+          ephemeral: true
+        });
+      }
     }
-  } else {
-    try {
-      await command.execute(interaction);
-    } catch (error) {
-      console.error('Error executing command:', error);
+
+  // Handle dropdown UUID selection
+  } else if (interaction.isStringSelectMenu() && interaction.customId.startsWith('http_uuid_select_')) {
+    const selectedUuid = interaction.values[0];
+
+    if (clients[selectedUuid]) {
+      queues[selectedUuid].push(async () => {
+        clients[selectedUuid].forEach(clientRes => {
+          clientRes.json({ message: `Command dispatched from Discord for UUID ${selectedUuid}` });
+        });
+        clients[selectedUuid] = [];
+      });
+
+      if (queues[selectedUuid].length === 1) {
+        processQueue(selectedUuid);
+      }
+
       await interaction.reply({
-        content: 'There was an error executing this command!',
-        ephemeral: true,
+        content: `✅ Command dispatched to UUID: \`${selectedUuid}\``,
+        ephemeral: true
+      });
+
+    } else {
+      await interaction.reply({
+        content: `❌ UUID not found or expired.`,
+        ephemeral: true
       });
     }
   }
 });
-
 
 // Load command files dynamically
 const commandsPath = path.join(__dirname, 'commands');
