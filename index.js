@@ -2,15 +2,15 @@ const express = require('express');
 const { randomUUID } = require('crypto');
 const fs = require('node:fs');
 const path = require('node:path');
-const { Client, Collection, Events, GatewayIntentBits, REST, Routes } = require('discord.js');
+const { Client, Collection, Events, GatewayIntentBits, REST, Routes, ActivityType } = require('discord.js');
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
 
-const clients = {}; // { uuid: [res, res, ...] }
-const queues = {};  // { uuid: Promise[] }
+const clients = {};
+const queues = {};
 
 const processQueue = async (uuid) => {
   while (queues[uuid] && queues[uuid].length > 0) {
@@ -115,65 +115,24 @@ app.post('/send/:uuid', (req, res) => {
   res.send(`Message queued for UUID: ${uuid}`);
 });
 
-// Slash command registration via POST
+// ENV
 const TOKEN = process.env['token'];
 const APP_ID = process.env['appId'];
 const GUILD_ID = process.env['guildId'];
 
-app.post('/updateCommands', async (req, res) => {
-  const data = req.body;
+let commandsRegistered = false;
+let startTime = Date.now();  // Track the bot's start time
 
-  // Check if the input is an array
-  if (!Array.isArray(data)) {
-    return res.status(400).json({ error: 'Input must be an array of command objects' });
-  }
-
-  // Map the incoming data to the expected command structure
-  const commands = data.map(cmd => ({
-    name: cmd.Name.toLowerCase(),
-    description: cmd.Description,
-    type: cmd.Type || 1
-  }));
-
-  const rest = new REST({ version: '10' }).setToken(TOKEN);
-
-  try {
-    // Attempt to register the commands with Discord's API
-    const result = await rest.put(
-      Routes.applicationGuildCommands(APP_ID, GUILD_ID),
-      { body: commands }
-    );
-
-    // Log success and respond to the client
-    console.log('✅ Slash commands registered:', result.map(r => r.name));
-    res.json({ success: true, registered: result.map(r => r.name) });
-  } catch (error) {
-    // Log the detailed error and send the response to the client
-    console.error('❌ Error registering commands:', error);
-    console.error('Error Details:', error.response ? error.response.body : error.message);
-
-    // If the error contains a response object, provide more detailed error info
-    if (error.response) {
-      return res.status(500).json({
-        error: {
-          message: error.message,
-          details: error.response.body
-        }
-      });
-    }
-
-    // Fallback for general errors
-    res.status(500).json({ error: error.message });
-  }
-});
-
-
-// Discord bot setup
+// Discord client setup
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 client.once(Events.ClientReady, c => {
-  console.log(`Ready! Logged in as ${c.user.tag}`);
+  console.log(`✅ Ready! Logged in as ${c.user.tag}`);
+  updateBotStatus();  // Set initial bot status on login
 });
+
+// Update the bot's status every minute with the uptime
+setInterval(updateBotStatus, 60000);
 
 client.commands = new Collection();
 
@@ -191,15 +150,16 @@ client.on(Events.InteractionCreate, async interaction => {
     await command.execute(interaction);
   } catch (error) {
     console.error(error);
+    const content = 'There was an error while executing this command!';
     if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({ content: 'There was an error while executing this command!', ephemeral: true });
+      await interaction.followUp({ content, ephemeral: true });
     } else {
-      await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+      await interaction.reply({ content, ephemeral: true });
     }
   }
 });
 
-// Load command files dynamically
+// Load command files
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
@@ -211,9 +171,68 @@ for (const file of commandFiles) {
   } else {
     console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
   }
+});
+
+// Command registration route
+app.post('/updateCommands', async (req, res) => {
+  if (commandsRegistered) {
+    return res.status(403).json({ error: 'Commands already registered. This route can only be called once.' });
+  }
+
+  const data = req.body;
+
+  if (!Array.isArray(data)) {
+    return res.status(400).json({ error: 'Input must be an array of command objects' });
+  }
+
+  const commands = data.map(cmd => ({
+    name: cmd.Name.toLowerCase(),
+    description: cmd.Description,
+    type: cmd.Type || 1
+  }));
+
+  const rest = new REST({ version: '10' }).setToken(TOKEN);
+
+  try {
+    const result = await rest.put(
+      Routes.applicationGuildCommands(APP_ID, GUILD_ID),
+      { body: commands }
+    );
+
+    console.log('✅ Slash commands registered:', result.map(r => r.name));
+    commandsRegistered = true;  // Mark that commands have been registered
+
+    res.json({ success: true, registered: result.map(r => r.name) });
+  } catch (error) {
+    console.error('❌ Error registering commands:', error);
+    console.error('Error Details:', error.response ? error.response.body : error.message);
+
+    if (error.response) {
+      return res.status(500).json({
+        error: {
+          message: error.message,
+          details: error.response.body
+        }
+      });
+    }
+
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Function to update the bot's status with the uptime
+function updateBotStatus() {
+  const uptime = Date.now() - startTime;  // Get uptime in milliseconds
+  const hours = Math.floor(uptime / (1000 * 60 * 60));
+  const minutes = Math.floor((uptime % (1000 * 60 * 60)) / (1000 * 60));
+
+  const statusMessage = `Up for ${hours}h ${minutes}m`;
+  client.user.setActivity(statusMessage, {
+    type: ActivityType.Watching,
+  });
 }
 
-// Start server and login bot
+// Start the server
 app.listen(PORT, () => {
   console.log(`✅ Express server running on http://localhost:${PORT}`);
 });
