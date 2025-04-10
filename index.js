@@ -200,27 +200,42 @@ setInterval(updateBotStatus, 60000);
 
 client.commands = new Collection();
 
+
 client.on(Events.InteractionCreate, async interaction => {
-  if (!interaction.isChatInputCommand()) return;
-
-  const command = interaction.client.commands.get(interaction.commandName);
-
-  if (!command) {
-    console.error(`No command matching ${interaction.commandName} was found.`);
-    return;
-  }
-
-  try {
-    await command.execute(interaction);
-  } catch (error) {
-    console.error(error);
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({ content: 'There was an error while executing this command!', ephemeral: true });
+    if (!interaction.isCommand()) return;
+  
+    const command = interaction.client.commands.get(interaction.commandName);
+  
+    // Check if the command has an execute function
+    if (!command || !command.execute) {
+      console.log(`Handling manual response for command: ${interaction.commandName}`);
+      
+      try {
+        await interaction.deferReply({ ephemeral: false });
+  
+        await interaction.followUp({
+          content: `This command is registered via HTTP`,
+        });
+      } catch (error) {
+        console.error('Error handling interaction without execute:', error);
+        await interaction.followUp({
+          content: 'There was an error processing your command. Please try again later.',
+          ephemeral: true,
+        });
+      }
     } else {
-      await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+      // Normal command execution (for built-in commands)
+      try {
+        await command.execute(interaction);
+      } catch (error) {
+        console.error('Error executing command:', error);
+        await interaction.reply({
+          content: 'There was an error executing this command!',
+          ephemeral: true,
+        });
+      }
     }
-  }
-});
+  });
 
 // Load command files dynamically
 const commandsPath = path.join(__dirname, 'commands');
