@@ -326,9 +326,9 @@ client.on(Events.InteractionCreate, async interaction => {
       queues[selectedUuid].push(async () => {
         clients[selectedUuid].forEach(clientRes => {
           clientRes.json({
-            ...compiledOptions,
+            arguments: compiledOptions,
             command: commandName,
-            message: `Command dispatched from Discord for UUID ${selectedUuid}`,
+            message: `If you're seeing this, something went wrong on your end!`,
             author: `@${interaction.user.username}`
           });
         });
