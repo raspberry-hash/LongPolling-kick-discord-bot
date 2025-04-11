@@ -2,7 +2,7 @@ const express = require('express');
 const { randomUUID } = require('crypto');
 const fs = require('node:fs');
 const path = require('node:path');
-const { Client, Collection, Events, GatewayIntentBits, REST, Routes, ActivityType, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
+const { Client, Collection, Events, GatewayIntentBits, REST, Routes, ActivityType, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, EmbedBuilder } = require('discord.js');
 
 const app = express();
 const PORT = 3000;
@@ -273,10 +273,17 @@ client.on(Events.InteractionCreate, async interaction => {
         processQueue(selectedUuid);
       }
 
-      await interaction.reply({
-        content: `✅ Command dispatched to UUID: \`${selectedUuid}\``,
-        ephemeral: true
-      });
+      const embed = new EmbedBuilder()
+      .setTitle('✅')
+      .setDescription(`Command successfully sent to server: \`${selectedUuid}\``)
+      .setColor(0x00FF00)
+      .setTimestamp();
+    
+    await interaction.update({
+      content: '',
+      embeds: [embed],
+      components: [] // Removes the select menu after the interaction
+    });
 
     } else {
       await interaction.reply({
