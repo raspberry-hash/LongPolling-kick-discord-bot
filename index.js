@@ -75,9 +75,9 @@ app.get('/poll/:uuid', (req, res) => {
     return res.status(404).json({ error: 'UUID not found' });
   }
 
-  lastSeen[uuid] = Date.now();
-
   queues[uuid].push(async () => {
+    lastSeen[uuid] = Date.now();
+
     clients[uuid].push(res);
 
     setTimeout(() => {
@@ -201,24 +201,39 @@ function updateBotStatus() {
 // Update the bot's status every minute (60000ms)
 setInterval(updateBotStatus, 60000);
 
+// Handle old uuids that arent pinging
 setInterval(() => {
   const now = Date.now();
-  const TIMEOUT = 20000; // 20 seconds
+  const TIMEOUT = 20000; // 20 seconds before marking as stale
+  const GRACE_PERIOD = 5000; // Extra 5 seconds before full removal
 
   for (const uuid of Object.keys(clients)) {
-    if (lastSeen[uuid] && now - lastSeen[uuid] > TIMEOUT) {
-      console.log(`⏱️ Cleaning up stale UUID: ${uuid}`);
-      // Close any pending responses
+    if (!lastSeen[uuid]) continue;
+
+    const timeSinceLastPoll = now - lastSeen[uuid];
+
+    if (timeSinceLastPoll > TIMEOUT) {
+      console.log(`⚠️ UUID ${uuid} is stale, marking for removal...`);
+
+      // Respond to any waiting clients with a warning (HTTP 410)
       clients[uuid].forEach(res => {
-        res.status(410).json({ error: 'Connection timed out' });
+        res.status(410).json({ error: 'Connection timed out, reconnecting...' });
       });
 
+      clients[uuid] = []; // Clear active clients but *do not remove UUID yet*
+    }
+
+    if (timeSinceLastPoll > TIMEOUT + GRACE_PERIOD) {
+      console.log(`❌ Removing UUID ${uuid} due to inactivity.`);
+      
+      // Now, actually remove from all tracking maps
       delete clients[uuid];
       delete queues[uuid];
       delete lastSeen[uuid];
     }
   }
-}, 5000);
+}, 5000); // Check every 5 seconds
+
 
 client.commands = new Collection();
 
