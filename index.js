@@ -309,8 +309,14 @@ client.on(Events.InteractionCreate, async interaction => {
 
     if (clients[selectedUuid]) {
       queues[selectedUuid].push(async () => {
+        const options = interaction.options?.data || [];
+        const compiledOptions = {};
+      
+        for (const opt of options) {
+          compiledOptions[opt.name] = opt.value;
+        }
         clients[selectedUuid].forEach(clientRes => {
-          clientRes.json({ message: `Command dispatched from Discord for UUID ${selectedUuid}`, author: `@${interaction.user.username}`, options: interaction.Options });
+          clientRes.json({ message: `Command dispatched from Discord for UUID ${selectedUuid}`, author: `@${interaction.user.username}`, options: compiledOptions });
         });
         clients[selectedUuid] = [];
       });
