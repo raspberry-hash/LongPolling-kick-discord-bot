@@ -246,6 +246,8 @@ setInterval(() => {
 
 client.commands = new Collection();
 
+const commandOptionsMap = new Map(); // Store original command options
+
 client.on(Events.InteractionCreate, async interaction => {
   // Handle slash command
   if (interaction.isChatInputCommand()) {
@@ -256,6 +258,14 @@ client.on(Events.InteractionCreate, async interaction => {
 
       try {
         await interaction.deferReply({ ephemeral: false });
+
+        const compiledOptions = {};
+        for (const opt of interaction.options.data) {
+          compiledOptions[opt.name] = opt.value;
+        }
+
+        // Store options by interaction ID
+        commandOptionsMap.set(interaction.id, compiledOptions);
 
         const uuidOptions = Object.keys(clients).map(uuid =>
           new StringSelectMenuOptionBuilder()
@@ -272,7 +282,7 @@ client.on(Events.InteractionCreate, async interaction => {
         }
 
         const selectMenu = new StringSelectMenuBuilder()
-          .setCustomId(`http_uuid_select_${interaction.commandName}`)
+          .setCustomId(`http_uuid_select_${interaction.commandName}_${interaction.id}`)
           .setPlaceholder('Select a UUID to send the command to')
           .addOptions(uuidOptions.slice(0, 25)); // Max 25 options
 
@@ -305,20 +315,25 @@ client.on(Events.InteractionCreate, async interaction => {
 
   // Handle dropdown UUID selection
   } else if (interaction.isStringSelectMenu() && interaction.customId.startsWith('http_uuid_select_')) {
+    const customIdParts = interaction.customId.split('_');
+    const originalInteractionId = customIdParts.slice(4).join('_');
     const selectedUuid = interaction.values[0];
+
+    const compiledOptions = commandOptionsMap.get(originalInteractionId) || {};
 
     if (clients[selectedUuid]) {
       queues[selectedUuid].push(async () => {
-        const options = interaction.options?.data || [];
-        const compiledOptions = {};
-      
-        for (const opt of options) {
-          compiledOptions[opt.name] = opt.value;
-        }
         clients[selectedUuid].forEach(clientRes => {
-          clientRes.json({ message: `Command dispatched from Discord for UUID ${selectedUuid}`, author: `@${interaction.user.username}`, options: compiledOptions });
+          clientRes.json({
+            message: `Command dispatched from Discord for UUID ${selectedUuid}`,
+            author: `@${interaction.user.username}`,
+            options: compiledOptions
+          });
         });
         clients[selectedUuid] = [];
+
+        // Clean up
+        commandOptionsMap.delete(originalInteractionId);
       });
 
       if (queues[selectedUuid].length === 1) {
@@ -326,16 +341,16 @@ client.on(Events.InteractionCreate, async interaction => {
       }
 
       const embed = new EmbedBuilder()
-      .setTitle('✅')
-      .setDescription(`Command successfully sent to server: \`${selectedUuid}\``)
-      .setColor(0x00FF00)
-      .setTimestamp();
-    
-    await interaction.update({
-      content: `${interaction.user}`,
-      embeds: [embed],
-      components: []
-    });
+        .setTitle('✅')
+        .setDescription(`Command successfully sent to server: \`${selectedUuid}\``)
+        .setColor(0x00FF00)
+        .setTimestamp();
+
+      await interaction.update({
+        content: `${interaction.user}`,
+        embeds: [embed],
+        components: []
+      });
 
     } else {
       await interaction.reply({
@@ -345,6 +360,8 @@ client.on(Events.InteractionCreate, async interaction => {
     }
   }
 });
+
+
 
 // Load command files dynamically
 const commandsPath = path.join(__dirname, 'commands');
