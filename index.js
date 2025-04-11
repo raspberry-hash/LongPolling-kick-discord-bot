@@ -343,8 +343,8 @@ client.on(Events.InteractionCreate, async interaction => {
       }
 
       const embed = new EmbedBuilder()
-        .setTitle('✅')
-        .setDescription(`Command successfully sent to server: \`${selectedUuid}\``)
+        .setTitle('Command Sent')
+        .setDescription(`\n\`${selectedUuid}\``)
         .setColor(0x00FF00)
         .setTimestamp();
 
