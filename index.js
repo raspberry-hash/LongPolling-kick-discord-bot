@@ -201,9 +201,9 @@ function updateBotStatus() {
   const hours = Math.floor(uptime / (1000 * 60 * 60));
   const minutes = Math.floor((uptime % (1000 * 60 * 60)) / (1000 * 60));
 
-  const statusMessage = `Server for ${hours}h ${minutes}m`;
+  const statusMessage = `To server for ${hours}h ${minutes}m`;
   client.user.setActivity(statusMessage, {
-    type: ActivityType.Watching,  // Set the activity type to "watching"
+    type: ActivityType.Listening,  // Set the activity type to "watching"
   });
 }
 
