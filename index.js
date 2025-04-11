@@ -72,9 +72,9 @@ app.get('/poll/:uuid', (req, res) => {
   const { uuid } = req.params;
 
   if (!clients[uuid]) {
-    return res.status(404).json({ error: 'UUID not found' });
+    return r
+    es.status(404).json({ error: 'UUID not found' });
   }
-
   queues[uuid].push(async () => {
     lastSeen[uuid] = Date.now();
 
@@ -92,11 +92,6 @@ app.get('/poll/:uuid', (req, res) => {
         }
       }
     }, 30000);
-
-    // Optionally clear timeout if response gets sent early elsewhere
-    res.on('close', () => {
-      clearTimeout(timeout);
-    });
   });
 
   if (queues[uuid].length === 1) {
