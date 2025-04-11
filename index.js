@@ -141,7 +141,8 @@ app.post('/updateCommands', async (req, res) => {
   const commands = data.map(cmd => ({
     name: cmd.Name.toLowerCase(),
     description: cmd.Description,
-    type: cmd.Type || 1
+    type: cmd.Type || 1,
+    options: cmd.Options || [] // pass options if provided
   }));
 
   const rest = new REST({ version: '10' }).setToken(TOKEN);

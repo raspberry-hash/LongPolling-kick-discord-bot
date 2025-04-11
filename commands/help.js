@@ -32,7 +32,7 @@ module.exports = {
         .setFooter({ text: 'Help Info' })
         .setTimestamp();
 
-      await interaction.reply({ embeds: [helpEmbed], ephemeral: true });
+      await interaction.reply({ embeds: [helpEmbed] }); // ephemeral: true
 
     } catch (error) {
       console.error('❌ Error in help command:', error);
