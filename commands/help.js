@@ -10,7 +10,7 @@ module.exports = {
       const helpEmbed = new EmbedBuilder()
         .setColor(0x00AEFF)
         .setTitle('Bot Help')
-        .setDescription('Please search below for your answers.')
+        .setDescription('Please look below for your answers.')
         .addFields(
           {
             name: '.1 Commands',
