@@ -310,7 +310,7 @@ client.on(Events.InteractionCreate, async interaction => {
     if (clients[selectedUuid]) {
       queues[selectedUuid].push(async () => {
         clients[selectedUuid].forEach(clientRes => {
-          clientRes.json({ message: `Command dispatched from Discord for UUID ${selectedUuid}`, author: `@${interaction.user.username}` });
+          clientRes.json({ message: `Command dispatched from Discord for UUID ${selectedUuid}`, author: `@${interaction.user.username}`, options: interaction.Options });
         });
         clients[selectedUuid] = [];
       });
