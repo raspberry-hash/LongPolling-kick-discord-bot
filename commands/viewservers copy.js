@@ -1,51 +1,46 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
-
-const API_BASE = 'https://longpolling-kick-discord-bot-production.up.railway.app';
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('test')
-    .setDescription('yeah'),
+    .setName('Help Info')
+    .setDescription('Shows how to use the bot'),
 
   async execute(interaction) {
     try {
-      // Step 1: Fetch UUIDs from your backend
-      const res = await fetch(`${API_BASE}/uuids`);
-      const embed1 = new EmbedBuilder()
-        .setColor(0x0099FF)
-        .setTitle('Error!')
-        .setDescription('❌ Unable to grab server count!')
-      // Step 2: Check if the response is valid
-      if (!res.ok) {
-        
-
-      // Step 5: Send the embed as the reply
-      return interaction.reply({ embeds: [embed1] });
-      }
-
-      const data = await res.json();
-
-      // Step 3: Check if data contains UUIDs
-      if (!data.uuids || data.uuids.length === 0) {
-        return interaction.reply({ embeds: [embed1] });
-      }
-
-      // Step 4: Create the embed with the list of UUIDs
-      const embed = new EmbedBuilder()
-        .setColor(0x0099FF)
-        .setTitle('Active Server UUIDs')
-        .setDescription(`**${data.uuids.length}** active server(s) found!`)
+      const helpEmbed = new EmbedBuilder()
+        .setColor(0x00AEFF)
+        .setTitle('Bot Help')
+        .setDescription('Please search below for your answers.')
         .addFields(
-          { name: 'UUIDs', value: "```"+data.uuids.join('\n')+"```", inline: false }
+          {
+            name: '.1 Commands',
+            value: 'Commands are registered as soon as a roblox Server is active and can fetch commands. \nOnce Registered all commands are registered for the up-time of the bot, ensuring all is updated',
+          },
+          {
+            name: '.2 Builtin Commands',
+            value: 'Preset commands can be used the same exact way with the exception of not needing a Roblox server',
+          },
+          {
+            name: '.3 UUIDs',
+            value: 'UUIDs are what define each server from another, linking the servers to your discord server. \nTo view all active servers, you can run "/getservers"',
+          },
+          {
+            name: 'Need more help? Commands not working?',
+            value: 'Developers are always here for you! \nContact <@886894966025097236> or <@1020614574250152029> with an issue/question and one will reply at their convenience.',
+          }
         )
+        .setFooter({ text: 'Help Info' })
+        .setTimestamp();
 
+      await interaction.reply({ embeds: [helpEmbed], ephemeral: true });
 
-      // Step 5: Send the embed as the reply
-      return interaction.reply({ embeds: [embed] });
     } catch (error) {
-      console.error(error);
-      interaction.reply('❌ There was an error while executing this command.');
+      console.error('❌ Error in help command:', error);
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp({ content: '❌ There was an error executing this command.', ephemeral: true });
+      } else {
+        await interaction.reply({ content: '❌ There was an error executing this command.', ephemeral: true });
+      }
     }
   }
 };
