@@ -316,6 +316,7 @@ client.on(Events.InteractionCreate, async interaction => {
   // Handle dropdown UUID selection
   } else if (interaction.isStringSelectMenu() && interaction.customId.startsWith('http_uuid_select_')) {
     const customIdParts = interaction.customId.split('_');
+    const commandName = customIdParts[3];
     const originalInteractionId = customIdParts.slice(4).join('_');
     const selectedUuid = interaction.values[0];
 
@@ -325,9 +326,10 @@ client.on(Events.InteractionCreate, async interaction => {
       queues[selectedUuid].push(async () => {
         clients[selectedUuid].forEach(clientRes => {
           clientRes.json({
+            ...compiledOptions,
+            command: commandName,
             message: `Command dispatched from Discord for UUID ${selectedUuid}`,
-            author: `@${interaction.user.username}`,
-            options: compiledOptions
+            author: `@${interaction.user.username}`
           });
         });
         clients[selectedUuid] = [];
