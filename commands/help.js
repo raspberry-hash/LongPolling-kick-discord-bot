@@ -2,7 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('Help Info')
+    .setName('help')
     .setDescription('Shows how to use the bot'),
 
   async execute(interaction) {
@@ -13,19 +13,19 @@ module.exports = {
         .setDescription('Please look below for your answers.')
         .addFields(
           {
-            name: '.1 Commands',
-            value: 'Commands are registered as soon as a roblox Server is active and can fetch commands. \nOnce Registered all commands are registered for the up-time of the bot, ensuring all is updated',
+            name: '📘 Commands',
+            value: 'Commands are registered once a Roblox server connects...',
           },
           {
-            name: '.2 Builtin Commands',
-            value: 'Preset commands can be used the same exact way with the exception of not needing a Roblox server',
+            name: '🧠 Built-in Commands',
+            value: 'These can be used without an active Roblox server.',
           },
           {
-            name: '.3 UUIDs',
-            value: 'UUIDs are what define each server from another, linking the servers to your discord server. \nTo view all active servers, you can run "/getservers"',
+            name: '🔗 UUIDs',
+            value: 'Each server has a unique UUID. Use `/getservers` to view them.',
           },
           {
-            name: 'Need more help? Commands not working?',
+            name: '❓ Need help? Commands not working?',
             value: 'Developers are always here for you! \nContact <@886894966025097236> or <@1020614574250152029> with an issue/question and one will reply at their convenience.',
           }
         )
