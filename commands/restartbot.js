@@ -26,9 +26,6 @@ module.exports = {
       await interaction.reply({ embeds: [restartEmbed] });
 
       // Give the message time to send before exiting
-      setTimeout(() => {
-        process.exit(0); // 🚪 Clean exit to trigger restart
-      }, 1000);
 
     } catch (error) {
       console.error('❌ Error in restart command:', error);
