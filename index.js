@@ -11,6 +11,7 @@ app.use(express.json());
 
 const clients = {}; // { uuid: [res, res, ...] }
 const queues = {};  // { uuid: Promise[] }
+const lastSeen = {}; // { uuid: timestamp }
 
 const processQueue = async (uuid) => {
   while (queues[uuid] && queues[uuid].length > 0) {
@@ -73,6 +74,8 @@ app.get('/poll/:uuid', (req, res) => {
   if (!clients[uuid]) {
     return res.status(404).json({ error: 'UUID not found' });
   }
+
+  lastSeen[uuid] = Date.now();
 
   queues[uuid].push(async () => {
     clients[uuid].push(res);
@@ -198,6 +201,25 @@ function updateBotStatus() {
 // Update the bot's status every minute (60000ms)
 setInterval(updateBotStatus, 60000);
 
+setInterval(() => {
+  const now = Date.now();
+  const TIMEOUT = 20000; // 20 seconds
+
+  for (const uuid of Object.keys(clients)) {
+    if (lastSeen[uuid] && now - lastSeen[uuid] > TIMEOUT) {
+      console.log(`⏱️ Cleaning up stale UUID: ${uuid}`);
+      // Close any pending responses
+      clients[uuid].forEach(res => {
+        res.status(410).json({ error: 'Connection timed out' });
+      });
+
+      delete clients[uuid];
+      delete queues[uuid];
+      delete lastSeen[uuid];
+    }
+  }
+}, 5000);
+
 client.commands = new Collection();
 
 client.on(Events.InteractionCreate, async interaction => {
@@ -264,7 +286,7 @@ client.on(Events.InteractionCreate, async interaction => {
     if (clients[selectedUuid]) {
       queues[selectedUuid].push(async () => {
         clients[selectedUuid].forEach(clientRes => {
-          clientRes.json({ message: `Command dispatched from Discord for UUID ${selectedUuid}` });
+          clientRes.json({ message: `Command dispatched from Discord for UUID ${selectedUuid}`, author: `@${interaction.user.username}` });
         });
         clients[selectedUuid] = [];
       });
@@ -280,9 +302,9 @@ client.on(Events.InteractionCreate, async interaction => {
       .setTimestamp();
     
     await interaction.update({
-      content: '',
+      content: `${interaction.user}`,
       embeds: [embed],
-      components: [] // Removes the select menu after the interaction
+      components: []
     });
 
     } else {
