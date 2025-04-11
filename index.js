@@ -80,15 +80,23 @@ app.get('/poll/:uuid', (req, res) => {
 
     clients[uuid].push(res);
 
-    setTimeout(() => {
+    const timeout = setTimeout(() => {
       if (clients[uuid]) {
         const index = clients[uuid].indexOf(res);
         if (index !== -1) {
           clients[uuid].splice(index, 1);
-          res.status(204).end();
+
+          if (!res.headersSent) {
+            res.status(204).end(); // No Content
+          }
         }
       }
     }, 30000);
+
+    // Optionally clear timeout if response gets sent early elsewhere
+    res.on('close', () => {
+      clearTimeout(timeout);
+    });
   });
 
   if (queues[uuid].length === 1) {
@@ -301,8 +309,17 @@ client.on(Events.InteractionCreate, async interaction => {
 
     if (clients[selectedUuid]) {
       queues[selectedUuid].push(async () => {
+        const options = {};
+        interaction.options.data.forEach(opt => {
+          options[opt.name] = opt.value;
+        });
+  
         clients[selectedUuid].forEach(clientRes => {
-          clientRes.json({ message: `Command dispatched from Discord for UUID ${selectedUuid}`, author: `@${interaction.user.username}` });
+          clientRes.json({
+            command: interaction.commandName,
+            author: interaction.user.username,
+            options: options
+          });
         });
         clients[selectedUuid] = [];
       });
