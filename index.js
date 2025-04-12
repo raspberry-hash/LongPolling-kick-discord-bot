@@ -85,7 +85,7 @@ app.get('/poll/:uuid', (req, res) => {
         const index = clients[uuid].indexOf(res);
         if (index !== -1) {
           clients[uuid].splice(index, 1);
-
+    
           if (!res.headersSent) {
             res.status(204).end(); // No Content
           }
@@ -206,7 +206,7 @@ function updateBotStatus() {
     type: ActivityType.Listening,  // Set the activity type to "watching"
   });
 }
-
+/
 // Update the bot's status every minute (60000ms)
 setInterval(updateBotStatus, 60000);
 
