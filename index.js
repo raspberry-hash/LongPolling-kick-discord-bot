@@ -85,7 +85,7 @@ app.get('/poll/:uuid', (req, res) => {
         const index = clients[uuid].indexOf(res);
         if (index !== -1) {
           clients[uuid].splice(index, 1);
-    
+
           if (!res.headersSent) {
             res.status(204).end(); // No Content
           }
@@ -201,7 +201,7 @@ function updateBotStatus() {
   const hours = Math.floor(uptime / (1000 * 60 * 60));
   const minutes = Math.floor((uptime % (1000 * 60 * 60)) / (1000 * 60));
 
-  const statusMessage = `server for ${hours}h ${minutes}m`;
+  const statusMessage = `To server for ${hours}h ${minutes}m`;
   client.user.setActivity(statusMessage, {
     type: ActivityType.Listening,  // Set the activity type to "watching"
   });
