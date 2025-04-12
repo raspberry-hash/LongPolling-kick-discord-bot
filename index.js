@@ -197,13 +197,14 @@ client.once(Events.ClientReady, c => {
 });
 
 function updateBotStatus() {
-  const uptime = Date.now() - startTime;  // Get uptime in milliseconds
-  const hours = Math.floor(uptime / (1000 * 60 * 60));
+  const uptime = Date.now() - startTime; // Get uptime in milliseconds
+  const days = Math.floor(uptime / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((uptime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const minutes = Math.floor((uptime % (1000 * 60 * 60)) / (1000 * 60));
 
-  const statusMessage = `To server for ${hours}h ${minutes}m`;
+  const statusMessage = `server for ${days}:${hours}:${minutes}`;
   client.user.setActivity(statusMessage, {
-    type: ActivityType.Listening,  // Set the activity type to "watching"
+    type: ActivityType.Listening, // Set the activity type to "listening"
   });
 }
 
