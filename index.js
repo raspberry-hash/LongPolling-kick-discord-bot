@@ -206,7 +206,7 @@ function updateBotStatus() {
     type: ActivityType.Listening,  // Set the activity type to "watching"
   });
 }
-/
+
 // Update the bot's status every minute (60000ms)
 setInterval(updateBotStatus, 60000);
 
