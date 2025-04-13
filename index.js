@@ -220,7 +220,7 @@ function cleanupStaleClients() {
     if (now - lastSeen[uuid] > TIMEOUT) {
       console.log(`Removing stale client: ${uuid}`);
       delete lastSeen[uuid];
-      if (clients[uuid] && clients[uuid].Length > 0) {
+      if (clients[uuid] && clients[uuid].length > 0) {
         delete clients[uuid];
         delete queues[uuid];    
       }
