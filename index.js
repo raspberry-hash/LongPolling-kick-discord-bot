@@ -213,7 +213,7 @@ setInterval(updateBotStatus, 60000);
 
 // Handle old uuids that arent pinging
 const TIMEOUT = 30000; // 30 seconds
-const CLEANUP_INTERVAL = 15000; // 15 seconds
+const CLEANUP_INTERVAL = 7000; // 15 seconds
 function cleanupStaleClients() {
   const now = Date.now();
   console.log("Running cleanup at", new Date(now).toISOString());
