@@ -212,7 +212,7 @@ function updateBotStatus() {
 setInterval(updateBotStatus, 60000);
 
 // Handle old uuids that arent pinging
-setInterval(() => {
+/* setInterval(() => {
   const now = Date.now();
   const TIMEOUT = 20000; // 20 seconds before marking as stale
   const GRACE_PERIOD = 5000; // Extra 5 seconds before full removal
@@ -242,7 +242,7 @@ setInterval(() => {
       delete lastSeen[uuid];
     }
   }
-}, 5000); // Check every 5 seconds
+}, 5000); // Check every 5 seconds */
 
 
 client.commands = new Collection();
