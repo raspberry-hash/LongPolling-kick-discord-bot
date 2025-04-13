@@ -1,4 +1,3 @@
 {
-ranks: {userid}
-roles: {roleid}
+  {ranks: {"1"}, roles: {"sigma"}},
 }
