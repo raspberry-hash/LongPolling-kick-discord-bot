@@ -216,13 +216,26 @@ const TIMEOUT = 30000; // 30 seconds
 const CLEANUP_INTERVAL = 15000; // 15 seconds
 function cleanupStaleClients() {
   const now = Date.now();
+  console.log("Running cleanup at", new Date(now).toISOString());
+
   for (const uuid in lastSeen) {
-    if (now - lastSeen[uuid] > TIMEOUT) {
+    const diff = now - lastSeen[uuid];
+    console.log(`Checking ${uuid}, last seen ${diff}ms ago`);
+    
+    if (diff > TIMEOUT) {
       console.log(`Removing stale client: ${uuid}`);
       delete lastSeen[uuid];
-      if (clients[uuid] && clients[uuid].length > 0) {
-        delete clients[uuid];
-        delete queues[uuid];    
+
+      if (clients[uuid]) {
+        if (clients[uuid].length > 0) {
+          delete clients[uuid];
+          delete queues[uuid];
+          console.log(`Deleted client and queue for ${uuid}`);
+        } else {
+          console.log(`Client ${uuid} has no data to delete`);
+        }
+      } else {
+        console.log(`No client data found for ${uuid}`);
       }
     }
   }
