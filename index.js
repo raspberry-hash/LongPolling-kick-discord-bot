@@ -72,12 +72,12 @@ app.get('/poll/:uuid', (req, res) => {
   const { uuid } = req.params;
 
   if (!clients[uuid]) {
-    return r
-    es.status(404).json({ error: 'UUID not found' });
+    return res.status(404).json({ error: 'UUID not found' });
   }
-  queues[uuid].push(async () => {
-    lastSeen[uuid] = Date.now();
 
+  lastSeen[uuid] = Date.now();
+
+  queues[uuid].push(async () => {
     clients[uuid].push(res);
 
     const timeout = setTimeout(() => {
@@ -212,37 +212,40 @@ function updateBotStatus() {
 setInterval(updateBotStatus, 60000);
 
 // Handle old uuids that arent pinging
-/* setInterval(() => {
+setInterval(() => {
   const now = Date.now();
   const TIMEOUT = 20000; // 20 seconds before marking as stale
   const GRACE_PERIOD = 5000; // Extra 5 seconds before full removal
 
   for (const uuid of Object.keys(clients)) {
-    if (!lastSeen[uuid]) continue;
+    const last = lastSeen[uuid];
+    if (!last) continue;
 
-    const timeSinceLastPoll = now - lastSeen[uuid];
+    const timeSinceLastPoll = now - last;
 
-    if (timeSinceLastPoll > TIMEOUT) {
+    // Still active, do nothing
+    if (timeSinceLastPoll <= TIMEOUT) continue;
+
+    // Mark as stale
+    if (timeSinceLastPoll > TIMEOUT && timeSinceLastPoll <= TIMEOUT + GRACE_PERIOD) {
       console.log(`⚠️ UUID ${uuid} is stale, marking for removal...`);
-
-      // Respond to any waiting clients with a warning (HTTP 410)
-      clients[uuid].forEach(res => {
-        res.status(410).json({ error: 'Connection timed out, reconnecting...' });
-      });
-
-      clients[uuid] = []; // Clear active clients but *do not remove UUID yet*
+      if (clients[uuid] && clients[uuid].length > 0) {
+        clients[uuid].forEach(res => {
+          res.status(410).json({ error: 'Connection timed out, reconnecting...' });
+        });
+        clients[uuid] = []; // Clear responses, but keep tracking
+      }
     }
 
+    // Fully remove after grace period
     if (timeSinceLastPoll > TIMEOUT + GRACE_PERIOD) {
       console.log(`❌ Removing UUID ${uuid} due to inactivity.`);
-      
-      // Now, actually remove from all tracking maps
       delete clients[uuid];
       delete queues[uuid];
       delete lastSeen[uuid];
     }
   }
-}, 5000); // Check every 5 seconds */
+}, 5000);
 
 
 client.commands = new Collection();
