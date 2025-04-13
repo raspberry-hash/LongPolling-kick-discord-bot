@@ -1,3 +1,4 @@
 {
-  {ranks: {"1"}, roles: {"sigma"}},
+  "ranks": ["1"],
+  "roles": ["sigma"]
 }
