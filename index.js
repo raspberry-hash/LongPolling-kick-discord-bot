@@ -227,13 +227,9 @@ function cleanupStaleClients() {
       delete lastSeen[uuid];
 
       if (clients[uuid]) {
-        if (clients[uuid].length > 0) {
           delete clients[uuid];
           delete queues[uuid];
           console.log(`Deleted client and queue for ${uuid}`);
-        } else {
-          console.log(`Client ${uuid} has no data to delete`);
-        }
       } else {
         console.log(`No client data found for ${uuid}`);
       }
