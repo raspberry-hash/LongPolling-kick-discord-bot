@@ -212,41 +212,22 @@ function updateBotStatus() {
 setInterval(updateBotStatus, 60000);
 
 // Handle old uuids that arent pinging
-/* setInterval(() => {
+const TIMEOUT = 30000; // 30 seconds
+const CLEANUP_INTERVAL = 15000; // 15 seconds
+function cleanupStaleClients() {
   const now = Date.now();
-  const TIMEOUT = 20000; // 20 seconds before marking as stale
-  const GRACE_PERIOD = 5000; // Extra 5 seconds before full removal
-
-  for (const uuid of Object.keys(clients)) {
-    const last = lastSeen[uuid];
-    if (!last) continue;
-
-    const timeSinceLastPoll = now - last;
-
-    // Still active, do nothing
-    if (timeSinceLastPoll <= TIMEOUT) continue;
-
-    // Mark as stale
-    if (timeSinceLastPoll > TIMEOUT && timeSinceLastPoll <= TIMEOUT + GRACE_PERIOD) {
-      console.log(`⚠️ UUID ${uuid} is stale, marking for removal...`);
-      if (clients[uuid] && clients[uuid].length > 0) {
-        clients[uuid].forEach(res => {
-          res.status(410).json({ error: 'Connection timed out, reconnecting...' });
-        });
-        clients[uuid] = []; // Clear responses, but keep tracking
+  for (const uuid in lastSeen) {
+    if (now - lastSeen[uuid] > TIMEOUT) {
+      console.log(`Removing stale client: ${uuid}`);
+      delete lastSeen[uuid];
+      if (clients[uuid] && clients[uuid].Length > 0) {
+        delete clients[uuid];
+        delete queues[uuid];    
       }
     }
-
-    // Fully remove after grace period
-    if (timeSinceLastPoll > TIMEOUT + GRACE_PERIOD) {
-      console.log(`❌ Removing UUID ${uuid} due to inactivity.`);
-      delete clients[uuid];
-      delete queues[uuid];
-      delete lastSeen[uuid];
-    }
   }
-}, 5000); */
-
+}
+setInterval(cleanupStaleClients, CLEANUP_INTERVAL);
 
 client.commands = new Collection();
 
