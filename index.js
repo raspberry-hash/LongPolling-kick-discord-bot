@@ -110,7 +110,7 @@ app.get('/poll/:uuid', (req, res) => {
           }
         }
       }
-    }, 25000); // Wait 25 seconds before sending StayAlive
+    }, 10000); // Wait 10 seconds before sending StayAlive
   
     res.on('close', () => {
       clearTimeout(timeout);
