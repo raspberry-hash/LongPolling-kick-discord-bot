@@ -98,25 +98,20 @@ app.get('/poll/:uuid', (req, res) => {
   // Add the response to the queue to keep the connection alive
   queues[uuid].push(async () => {
     clients[uuid].push(res);
-
-    // Send a "StayAlive" response to keep the connection alive
-    res.json({ status: 'StayAlive' });
-
-    // Timeout after 30 seconds if no data is available
+  
     const timeout = setTimeout(() => {
       if (clients[uuid]) {
         const index = clients[uuid].indexOf(res);
         if (index !== -1) {
           clients[uuid].splice(index, 1);
-
+  
           if (!res.headersSent) {
-            res.status(204).end(); // No Content
+            res.json({ status: 'StayAlive' }); // Send only after waiting
           }
         }
       }
-    }, 30000); // Timeout after 30 seconds
-
-    // Optionally clear timeout if response is sent early
+    }, 25000); // Wait 25 seconds before sending StayAlive
+  
     res.on('close', () => {
       clearTimeout(timeout);
     });
