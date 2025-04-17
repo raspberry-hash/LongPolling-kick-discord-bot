@@ -258,9 +258,6 @@ function cleanupStaleClients() {
 }
 setInterval(cleanupStaleClients, CLEANUP_INTERVAL);
 
-const ranksData = JSON.parse(fs.readFileSync('./stupidfuckingranksthatchatgptcouldeasiallydo.json', 'utf8'));
-console.log(ranksData);
-
 client.commands = new Collection();
 
 const commandOptionsMap = new Map(); // Store original command options
@@ -271,21 +268,45 @@ client.on(Events.InteractionCreate, async interaction => {
     const command = interaction.client.commands.get(interaction.commandName);
     console.log(interaction.commandName);
 
-    const limits = ranksData[interaction.commandName] || ranksData["default"];
-    const userId = interaction.user.id;
-    const userHasDirectAccess = limits.ranks.includes(userId);
+    const ranksData = JSON.parse(fs.readFileSync('./stupidfuckingranksthatchatgptcouldeasiallydo.json', 'utf8'));
+    console.log("Ranks Data Loaded:", ranksData); // Log ranksData to verify it's loaded correctly  
 
-    const memberRoles = interaction.member.roles.cache.map(role => role.name.toLowerCase());
-    const requiredRoles = limits.roles.map(role => role.toLowerCase());
-    const userHasRoleAccess = memberRoles.some(role => requiredRoles.includes(role));
+    const commandName = interaction.commandName;
+    const limits = ranksData[commandName] || ranksData["default"];
+
     const isEveryoneCommand = limits.everyone === true;
+    console.log("Is this an 'everyone' command?", isEveryoneCommand); // Log if the command is 'everyone'  
 
-    if (!isEveryoneCommand && !userHasDirectAccess && !userHasRoleAccess) {
-      return await interaction.reply({
-        content: "❌**Womp Womp**... You're lacking permissions for this command.",
-        ephemeral: false // true usally but set to false to clown others in general who attempt to use lol? idk
-      });
+    if (isEveryoneCommand) {
+      // Skip the rank/role check if it's an everyone command
+      console.log("This is an 'everyone' command. Skipping permission check.");
+    } else {
+      // Proceed to permission checks for other commands
+      const userId = interaction.user.id;
+      console.log("User ID for permission check:", userId); // Log the userId being checked
+  
+      // Check if the user is in the ranks list
+      const userHasDirectAccess = limits.ranks.includes(userId);
+      console.log(`User has direct access (ranks): ${userHasDirectAccess}`); // Log direct access check
+  
+      // Check if the user has any of the required roles
+      const memberRoles = interaction.member.roles.cache.map(role => role.name.toLowerCase());
+      console.log("Member roles:", memberRoles); // Log member roles
+      const requiredRoles = limits.roles.map(role => role.toLowerCase());
+      console.log("Required roles for command:", requiredRoles); // Log required roles
+      const userHasRoleAccess = memberRoles.some(role => requiredRoles.includes(role));
+      console.log(`User has role access: ${userHasRoleAccess}`); // Log role access check
+  
+      // If the user doesn't have direct access or role access, deny the command
+      if (!userHasDirectAccess && !userHasRoleAccess) {
+        console.log("User doesn't have permission to use this command.");
+        return await interaction.reply({
+          content: "❌**Womp Womp**... You're lacking permissions for this command.",
+          ephemeral: false
+        });
+      }
     }
+      // === 🔓 PERMISSION CHECK ENDS HERE ===
     
     if (!command || !command.execute) {
       console.log(`Handling manual response for command: ${interaction.commandName}`);

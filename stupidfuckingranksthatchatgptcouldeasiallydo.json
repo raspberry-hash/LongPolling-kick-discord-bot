@@ -4,6 +4,8 @@
     "roles": ["sigma"]
   },
   "help": {
+    "ranks": [],
+    "roles": [],
     "everyone": true
   }
 }
