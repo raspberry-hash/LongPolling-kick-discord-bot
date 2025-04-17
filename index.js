@@ -59,6 +59,9 @@ app.get('/clear-all', (req, res) => {
       });
       delete clients[uuid];
     }
+    if (lastSeen[uuid]) {
+      delete lastSeen[uuid];
+    }
     delete queues[uuid];
   }
   res.send("All UUIDs have been cleared.");
@@ -74,6 +77,9 @@ app.get('/disconnect/:uuid', (req, res) => {
     delete clients[uuid];
     delete queues[uuid];
     res.send(`UUID ${uuid} disconnected`);
+    if (lastSeen[uuid]) {
+      delete lastSeen[uuid];
+    }
   } else {
     res.status(404).send("UUID not found");
   }
