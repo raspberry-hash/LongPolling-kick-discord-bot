@@ -279,23 +279,17 @@ client.on(Events.InteractionCreate, async interaction => {
 
     if (isEveryoneCommand) {
       // Skip the rank/role check if it's an everyone command
-      console.log("This is an 'everyone' command. Skipping permission check.");
     } else {
       // Proceed to permission checks for other commands
       const userId = interaction.user.id;
-      console.log("User ID for permission check:", userId); // Log the userId being checked
   
       // Check if the user is in the ranks list
       const userHasDirectAccess = limits.ranks.includes(userId);
-      console.log(`User has direct access (ranks): ${userHasDirectAccess}`); // Log direct access check
   
       // Check if the user has any of the required roles
       const memberRoles = interaction.member.roles.cache.map(role => role.name.toLowerCase());
-      console.log("Member roles:", memberRoles); // Log member roles
       const requiredRoles = limits.roles.map(role => role.toLowerCase());
-      console.log("Required roles for command:", requiredRoles); // Log required roles
       const userHasRoleAccess = memberRoles.some(role => requiredRoles.includes(role));
-      console.log(`User has role access: ${userHasRoleAccess}`); // Log role access check
   
       // If the user doesn't have direct access or role access, deny the command
       if (!userHasDirectAccess && !userHasRoleAccess) {
