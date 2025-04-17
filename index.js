@@ -258,6 +258,9 @@ function cleanupStaleClients() {
 }
 setInterval(cleanupStaleClients, CLEANUP_INTERVAL);
 
+const ranksData = JSON.parse(fs.readFileSync('./stupidfuckingranksthatchatgptcouldeasiallydo.json', 'utf8'));
+console.log(ranksData);
+
 client.commands = new Collection();
 
 const commandOptionsMap = new Map(); // Store original command options
@@ -382,6 +385,7 @@ client.on(Events.InteractionCreate, async interaction => {
 // Load command files dynamically
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+
 
 for (const file of commandFiles) {
   const filePath = path.join(commandsPath, file);
