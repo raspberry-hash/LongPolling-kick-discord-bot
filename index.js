@@ -270,7 +270,7 @@ client.on(Events.InteractionCreate, async interaction => {
   if (interaction.isChatInputCommand()) {
     const command = interaction.client.commands.get(interaction.commandName);
 
-    const limits = ranksData[commandName] || ranksData["default"];
+    const limits = ranksData[interaction.commandName] || ranksData["default"];
     const userId = interaction.user.id;
     const userHasDirectAccess = limits.ranks.includes(userId);
 
