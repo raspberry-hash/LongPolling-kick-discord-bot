@@ -76,7 +76,8 @@ app.get('/poll/:uuid', (req, res) => {
   }
 
   lastSeen[uuid] = Date.now();
-
+  console.log(`[POLL] Updated lastSeen for ${uuid} to ${lastSeen[uuid]}`);
+  
   queues[uuid].push(async () => {
     clients[uuid].push(res);
 
@@ -216,7 +217,7 @@ const TIMEOUT = 30000; // 30 seconds
 const CLEANUP_INTERVAL = 7000; // 15 seconds
 function cleanupStaleClients() {
   const now = Date.now();
-  console.log("Running cleanup at", new Date(now).toISOString());
+  // console.log("Running cleanup at", new Date(now).toISOString());
 
   for (const uuid in lastSeen) {
     const diff = now - lastSeen[uuid];
