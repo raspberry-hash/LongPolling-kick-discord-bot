@@ -88,41 +88,6 @@ app.get('/disconnect/:uuid', (req, res) => {
 app.get('/poll/:uuid', (req, res) => {
   const { uuid } = req.params;
 
-  if (!clients[uuid] || !queues[uuid]) {
-    return res.status(404).json({ error: 'UUID not found' });
-  }
-
-  // Push poll request handler to the queue
-  queues[uuid].push(async () => {
-    // Update lastSeen only when the request is actually processed
-    lastSeen[uuid] = Date.now();
-    console.log(`[POLL] Updated lastSeen for ${uuid} to ${lastSeen[uuid]}`);
-
-    clients[uuid].push(res);
-
-    const timeout = setTimeout(() => {
-      const index = clients[uuid].indexOf(res);
-      if (index !== -1) {
-        clients[uuid].splice(index, 1);
-        if (!res.headersSent) {
-          res.status(204).end(); // No Content
-        }
-      }
-    }, 30000);
-
-    res.on('close', () => {
-      clearTimeout(timeout);
-    });
-  });
-
-  // Kick off the queue processor if it's idle
-  if (queues[uuid].length === 1) {
-    processQueue(uuid);
-  }
-});
-/* app.get('/poll/:uuid', (req, res) => {
-  const { uuid } = req.params;
-
   if (!clients[uuid]) {
     return res.status(404).json({ error: 'UUID not found' });
   }
@@ -155,7 +120,7 @@ app.get('/poll/:uuid', (req, res) => {
   if (queues[uuid].length === 1) {
     processQueue(uuid);
   }
-}); */
+});
 
 app.post('/send/:uuid', (req, res) => {
   const { uuid } = req.params;
