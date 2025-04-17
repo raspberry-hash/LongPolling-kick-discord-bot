@@ -270,6 +270,21 @@ client.on(Events.InteractionCreate, async interaction => {
   if (interaction.isChatInputCommand()) {
     const command = interaction.client.commands.get(interaction.commandName);
 
+    const limits = ranksData[commandName] || ranksData["default"];
+    const userId = interaction.user.id;
+    const userHasDirectAccess = limits.ranks.includes(userId);
+
+    const memberRoles = interaction.member.roles.cache.map(role => role.name.toLowerCase());
+    const requiredRoles = limits.roles.map(role => role.toLowerCase());
+    const userHasRoleAccess = memberRoles.some(role => requiredRoles.includes(role));
+
+    if (!userHasDirectAccess && !userHasRoleAccess) {
+      return await interaction.reply({
+        content: "❌ You don't have permission to use this command.",
+        ephemeral: true
+      });
+    }
+    
     if (!command || !command.execute) {
       console.log(`Handling manual response for command: ${interaction.commandName}`);
 
