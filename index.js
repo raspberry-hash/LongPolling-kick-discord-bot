@@ -277,11 +277,12 @@ client.on(Events.InteractionCreate, async interaction => {
     const memberRoles = interaction.member.roles.cache.map(role => role.name.toLowerCase());
     const requiredRoles = limits.roles.map(role => role.toLowerCase());
     const userHasRoleAccess = memberRoles.some(role => requiredRoles.includes(role));
+    const isEveryoneCommand = limits.everyone === true;
 
-    if (!userHasDirectAccess && !userHasRoleAccess) {
+    if (!isEveryoneCommand && !userHasDirectAccess && !userHasRoleAccess) {
       return await interaction.reply({
-        content: "❌ You don't have permission to use this command.",
-        ephemeral: true
+        content: "❌**Womp Womp**... You're lacking permissions for this command.",
+        ephemeral: false // true usally but set to false to clown others in general who attempt to use lol? idk
       });
     }
     

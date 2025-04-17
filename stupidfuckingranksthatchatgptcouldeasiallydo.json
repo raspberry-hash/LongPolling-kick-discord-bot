@@ -1,10 +1,9 @@
 {
   "default": {
-    "ranks": ["155255529952"],
+    "ranks": ["1169241652787953724","1020614574250152029"],
     "roles": ["sigma"]
   },
-  "ban": {
-    "ranks": ["155255529952"],
-    "roles": ["sigma", "alpha"]
+  "help": {
+    "everyone": true
   }
 }
