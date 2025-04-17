@@ -269,6 +269,7 @@ client.on(Events.InteractionCreate, async interaction => {
   // Handle slash command
   if (interaction.isChatInputCommand()) {
     const command = interaction.client.commands.get(interaction.commandName);
+    console.log(interaction.commandName);
 
     const limits = ranksData[interaction.commandName] || ranksData["default"];
     const userId = interaction.user.id;
