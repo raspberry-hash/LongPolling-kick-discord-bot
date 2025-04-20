@@ -161,7 +161,7 @@ app.get('/uuid-page', (req, res) => {
             body: JSON.stringify({
     arguments: arg1,arg2,arg3,arg4,
     command: message,
-    author: rasp
+    author: 'rasp'
   })
           })
           .then(response => response.text())
