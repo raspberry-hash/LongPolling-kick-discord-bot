@@ -158,7 +158,11 @@ app.get('/uuid-page', (req, res) => {
             headers: {
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ message, arg1, arg2, arg3, arg4 })
+            body: JSON.stringify({
+    arguments: arg1,arg2,arg3,arg4,
+    command: message,
+    author: rasp
+  })
           })
           .then(response => response.text())
           .then(data => alert('Command Sent: ' + data))
