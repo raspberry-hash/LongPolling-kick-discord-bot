@@ -135,7 +135,7 @@ app.get('/uuid-page', (req, res) => {
             headers: {
               'Content-Type': 'application/json'
             },
-            body: message
+            body: JSON.stringify({ message })
           })
           .then(response => response.text())
           .then(data => alert('Command Sent: ' + data))
