@@ -87,13 +87,31 @@ app.get('/uuid-page', (req, res) => {
       <h1>Select UUID to Send Command</h1>
       <form id="uuidForm">
         <label for="uuid">Select UUID:</label>
-        <select id="uuid" name="uuid">
+        <select id="uuid" name="uuid" required>
           <option value="" disabled selected>Select a UUID</option>
         </select>
         <br><br>
-        <label for="message">Command Message:</label>
+
+        <label for="message">Command Name:</label>
         <input type="text" id="message" name="message" required>
         <br><br>
+
+        <label for="arg1">Argument 1 (optional):</label>
+        <input type="text" id="arg1" name="arg1">
+        <br><br>
+
+        <label for="arg2">Argument 2 (optional):</label>
+        <input type="text" id="arg2" name="arg2">
+        <br><br>
+
+        <label for="arg3">Argument 3 (optional):</label>
+        <input type="text" id="arg3" name="arg3">
+        <br><br>
+
+        <label for="arg4">Argument 4 (optional):</label>
+        <input type="text" id="arg4" name="arg4">
+        <br><br>
+
         <button type="submit">Send Command</button>
       </form>
 
@@ -113,6 +131,7 @@ app.get('/uuid-page', (req, res) => {
             } else {
               const option = document.createElement('option');
               option.textContent = 'No active UUIDs';
+              option.disabled = true;
               select.appendChild(option);
             }
           })
@@ -121,12 +140,16 @@ app.get('/uuid-page', (req, res) => {
         // Handle form submission
         document.getElementById('uuidForm').addEventListener('submit', function(event) {
           event.preventDefault();
-          
+
           const uuid = document.getElementById('uuid').value;
           const message = document.getElementById('message').value;
+          const arg1 = document.getElementById('arg1').value;
+          const arg2 = document.getElementById('arg2').value;
+          const arg3 = document.getElementById('arg3').value;
+          const arg4 = document.getElementById('arg4').value;
 
           if (!uuid || !message) {
-            alert('Please select a UUID and provide a message.');
+            alert('Please select a UUID and provide a command name.');
             return;
           }
 
@@ -135,7 +158,7 @@ app.get('/uuid-page', (req, res) => {
             headers: {
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ message })
+            body: JSON.stringify({ message, arg1, arg2, arg3, arg4 })
           })
           .then(response => response.text())
           .then(data => alert('Command Sent: ' + data))
