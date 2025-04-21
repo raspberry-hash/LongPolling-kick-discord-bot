@@ -184,11 +184,9 @@ app.get('/uuid-page', (req, res) => {
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-              message: {
-                command: command,
-                arguments: args,
-                author: 'rasp'
-              }
+              command: command,
+              arguments: args,
+              author: 'WEB_AUTH_WL'
             })
           })
           .then(response => response.text())
