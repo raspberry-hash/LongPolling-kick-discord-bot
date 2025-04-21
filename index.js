@@ -187,7 +187,7 @@ app.get('/uuid-page', (req, res) => {
               command: command,
               arguments: args,
               author: 'WEB_AUTH_WL',
-              message: 'If you\'re seeing this, something went wrong on your end!'
+              m: 'hi'
             })
           })
           .then(response => response.text())
