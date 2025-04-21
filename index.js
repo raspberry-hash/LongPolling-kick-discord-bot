@@ -74,7 +74,6 @@ app.get('/clear-all', (req, res) => {
 app.get('/', (req, res) => {
   res.send("hi");
 });
-
 app.get('/uuid-page', (req, res) => {
   if (!registeredCommands || !registeredCommands.length) {
     return res.status(400).send('❌ No commands have been registered yet.');
@@ -95,6 +94,7 @@ app.get('/uuid-page', (req, res) => {
         <select id="uuid" name="uuid" required>
           <option value="" disabled selected>Select a UUID</option>
         </select>
+        <button type="button" id="refreshUUIDs">Refresh UUIDs</button>
         <br><br>
 
         <label for="command">Select Command:</label>
@@ -129,7 +129,7 @@ app.get('/uuid-page', (req, res) => {
           const selected = commandSelect.options[commandSelect.selectedIndex];
           const options = JSON.parse(selected.dataset.options || '[]');
 
-          argsContainer.innerHTML = ''; // Clear previous
+          argsContainer.innerHTML = ''; // Clear previous inputs
 
           options.forEach(opt => {
             const label = document.createElement('label');
@@ -150,18 +150,41 @@ app.get('/uuid-page', (req, res) => {
           });
         });
 
-        // Populate UUIDs
-        fetch('/uuids')
-          .then(res => res.json())
-          .then(data => {
-            const uuidSelect = document.getElementById('uuid');
-            data.uuids.forEach(uuid => {
-              const opt = document.createElement('option');
-              opt.value = uuid;
-              opt.textContent = uuid.slice(0, 8) + '...';
-              uuidSelect.appendChild(opt);
+        // Function to refresh UUIDs
+        function refreshUUIDs() {
+          const uuidSelect = document.getElementById('uuid');
+          uuidSelect.innerHTML = '<option value="" disabled selected>Select a UUID</option>'; // Reset the dropdown
+
+          // Fetch new UUIDs
+          fetch('/uuids')
+            .then(res => res.json())
+            .then(data => {
+              if (data.uuids && data.uuids.length > 0) {
+                data.uuids.forEach(uuid => {
+                  const opt = document.createElement('option');
+                  opt.value = uuid;
+                  opt.textContent = uuid.slice(0, 8) + '...';
+                  uuidSelect.appendChild(opt);
+                });
+              } else {
+                const opt = document.createElement('option');
+                opt.textContent = 'No active UUIDs available';
+                opt.disabled = true;
+                uuidSelect.appendChild(opt);
+              }
+            })
+            .catch(error => {
+              console.error('Error fetching UUIDs:', error);
             });
-          });
+        }
+
+        // Initial UUID population
+        refreshUUIDs();
+
+        // Add event listener for the "Refresh UUIDs" button
+        document.getElementById('refreshUUIDs').addEventListener('click', function () {
+          refreshUUIDs();  // Refresh the UUID list
+        });
 
         // Submit form
         document.getElementById('uuidForm').addEventListener('submit', function (event) {
@@ -199,6 +222,7 @@ app.get('/uuid-page', (req, res) => {
     </html>
   `);
 });
+
 
 app.get('/disconnect/:uuid', (req, res) => {
   const { uuid } = req.params;
