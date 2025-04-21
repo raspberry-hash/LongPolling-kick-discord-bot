@@ -157,18 +157,27 @@ app.get('/uuid-page', (req, res) => {
           uuidSelect.innerHTML = '';  // Clear the existing options
 
           // Fetch new UUIDs
-          fetch('/uuids')
-            .then(res => res.json())
-            .then(data => {
-              data.uuids.forEach(uuid => {
-                const opt = document.createElement('option');
-                opt.value = uuid;
-                opt.textContent = uuid.slice(0, 8) + '...'; // Shorten UUID for display
-                uuidSelect.appendChild(opt);
-              });
-            })
-            .catch(error => console.error('Error fetching UUIDs:', error));
-        }
+fetch('/uuids')
+  .then(res => res.json())
+  .then(data => {
+    const uuidSelect = document.getElementById('uuid');
+    if (data.uuids && data.uuids.length > 0) {
+      data.uuids.forEach(uuid => {
+        const opt = document.createElement('option');
+        opt.value = uuid;
+        opt.textContent = uuid.slice(0, 8) + '...';
+        uuidSelect.appendChild(opt);
+      });
+    } else {
+      const opt = document.createElement('option');
+      opt.textContent = 'No active UUIDs available';
+      opt.disabled = true;
+      uuidSelect.appendChild(opt);
+    }
+  })
+  .catch(error => {
+    console.error('Error fetching UUIDs:', error);
+  });
 
         // Initial UUID population
         refreshUUIDs();
