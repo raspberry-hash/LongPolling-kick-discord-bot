@@ -95,7 +95,6 @@ app.get('/uuid-page', (req, res) => {
         <select id="uuid" name="uuid" required>
           <option value="" disabled selected>Select a UUID</option>
         </select>
-        <button type="button" id="refreshUUIDs">Refresh UUIDs</button>
         <br><br>
 
         <label for="command">Select Command:</label>
@@ -151,41 +150,18 @@ app.get('/uuid-page', (req, res) => {
           });
         });
 
-        // Function to refresh UUIDs
-        function refreshUUIDs() {
-          const uuidSelect = document.getElementById('uuid');
-          uuidSelect.innerHTML = '';  // Clear the existing options
-
-          // Fetch new UUIDs
-fetch('/uuids')
-  .then(res => res.json())
-  .then(data => {
-    const uuidSelect = document.getElementById('uuid');
-    if (data.uuids && data.uuids.length > 0) {
-      data.uuids.forEach(uuid => {
-        const opt = document.createElement('option');
-        opt.value = uuid;
-        opt.textContent = uuid.slice(0, 8) + '...';
-        uuidSelect.appendChild(opt);
-      });
-    } else {
-      const opt = document.createElement('option');
-      opt.textContent = 'No active UUIDs available';
-      opt.disabled = true;
-      uuidSelect.appendChild(opt);
-    }
-  })
-  .catch(error => {
-    console.error('Error fetching UUIDs:', error);
-  });
-
-        // Initial UUID population
-        refreshUUIDs();
-
-        // Add event listener for the "Refresh UUIDs" button
-        document.getElementById('refreshUUIDs').addEventListener('click', function() {
-          refreshUUIDs();  // Refresh the UUID list
-        });
+        // Populate UUIDs
+        fetch('/uuids')
+          .then(res => res.json())
+          .then(data => {
+            const uuidSelect = document.getElementById('uuid');
+            data.uuids.forEach(uuid => {
+              const opt = document.createElement('option');
+              opt.value = uuid;
+              opt.textContent = uuid.slice(0, 8) + '...';
+              uuidSelect.appendChild(opt);
+            });
+          });
 
         // Submit form
         document.getElementById('uuidForm').addEventListener('submit', function (event) {
@@ -210,7 +186,7 @@ fetch('/uuids')
             body: JSON.stringify({
               command: command,
               arguments: args,
-              message: 'If you're seeing this, something went wrong on your end!',
+              message: 'If you\'re seeing this, something went wrong on your end!',
               author: 'WEB_AUTH_WL'
             })
           })
