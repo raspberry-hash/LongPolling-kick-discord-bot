@@ -186,7 +186,8 @@ app.get('/uuid-page', (req, res) => {
             body: JSON.stringify({
               command: command,
               arguments: args,
-              author: 'WEB_AUTH_WL'
+              author: 'WEB_AUTH_WL',
+              message: 'If you\'re seeing this, something went wrong on your end!'
             })
           })
           .then(response => response.text())
