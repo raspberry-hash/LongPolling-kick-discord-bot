@@ -75,148 +75,174 @@ app.get('/', (req, res) => {
   res.send("hi");
 });
 
-app.get('/uuid-page', (req, res) => {
-  if (!registeredCommands || !registeredCommands.length) {
-    return res.status(400).send('❌ No commands have been registered yet.');
-  }
+res.send(`
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Command to UUID</title>
+    <style>
+      body {
+        background-color: #121212;
+        color: #ffffff;
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
 
-  res.send(`
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Send Command to UUID</title>
-    </head>
-    <body>
-      <h1>Send Command to UUID</h1>
-      <form id="uuidForm">
-        <label for="uuid">Select UUID:</label>
-        <select id="uuid" name="uuid" required>
-          <option value="" disabled selected>Select a UUID</option>
-        </select>
-        <button type="button" id="refreshUUIDs">Refresh UUIDs</button>
-        <br><br>
+      h1 {
+        color: #ffffff;
+      }
 
-        <label for="command">Select Command:</label>
-        <select id="command" name="command" required>
-          <option value="" disabled selected>Select a command</option>
-        </select>
-        <br><br>
+      label {
+        color: #dddddd;
+      }
 
-        <div id="argsContainer"></div>
+      select, input, button {
+        background-color: #1e1e1e;
+        color: #ffffff;
+        border: 1px solid #333333;
+        padding: 8px;
+        margin-top: 5px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+      }
 
-        <button type="submit">Send Command</button>
-      </form>
+      button {
+        cursor: pointer;
+      }
 
-      <script>
-        // Injected command list from server
-        const commands = ${JSON.stringify(registeredCommands)};
+      button:hover {
+        background-color: #333333;
+      }
 
-        const commandSelect = document.getElementById('command');
-        const argsContainer = document.getElementById('argsContainer');
+      option {
+        background-color: #1e1e1e;
+        color: #ffffff;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Send Command to UUID</h1>
+    <form id="uuidForm">
+      <label for="uuid">Select UUID:</label>
+      <select id="uuid" name="uuid" required>
+        <option value="" disabled selected>Select a UUID</option>
+      </select>
+      <button type="button" id="refreshUUIDs">Refresh UUIDs</button>
+      <br><br>
 
-        commands.forEach(cmd => {
-          const option = document.createElement('option');
-          option.value = cmd.name;
-          option.textContent = cmd.name;
-          option.dataset.options = JSON.stringify(cmd.options || []);
-          commandSelect.appendChild(option);
+      <label for="command">Select Command:</label>
+      <select id="command" name="command" required>
+        <option value="" disabled selected>Select a command</option>
+      </select>
+      <br><br>
+
+      <div id="argsContainer"></div>
+
+      <button type="submit">Send Command</button>
+    </form>
+
+    <script>
+      const commands = ${JSON.stringify(registeredCommands)};
+      const commandSelect = document.getElementById('command');
+      const argsContainer = document.getElementById('argsContainer');
+
+      commands.forEach(cmd => {
+        const option = document.createElement('option');
+        option.value = cmd.name;
+        option.textContent = cmd.name;
+        option.dataset.options = JSON.stringify(cmd.options || []);
+        commandSelect.appendChild(option);
+      });
+
+      commandSelect.addEventListener('change', function () {
+        const selected = commandSelect.options[commandSelect.selectedIndex];
+        const options = JSON.parse(selected.dataset.options || '[]');
+
+        argsContainer.innerHTML = '';
+
+        options.forEach(opt => {
+          const label = document.createElement('label');
+          label.htmlFor = opt.name;
+          label.textContent = opt.name + (opt.required ? ' (required)' : ' (optional)');
+
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.name = opt.name;
+          input.id = opt.name;
+          input.required = !!opt.required;
+
+          argsContainer.appendChild(label);
+          argsContainer.appendChild(document.createElement('br'));
+          argsContainer.appendChild(input);
+          argsContainer.appendChild(document.createElement('br'));
+          argsContainer.appendChild(document.createElement('br'));
         });
+      });
 
-        commandSelect.addEventListener('change', function () {
-          const selected = commandSelect.options[commandSelect.selectedIndex];
-          const options = JSON.parse(selected.dataset.options || '[]');
+      function refreshUUIDs() {
+        const uuidSelect = document.getElementById('uuid');
+        uuidSelect.innerHTML = '<option value="" disabled selected>Select a UUID</option>';
 
-          argsContainer.innerHTML = '';
-
-          options.forEach(opt => {
-            const label = document.createElement('label');
-            label.htmlFor = opt.name;
-            label.textContent = opt.name + (opt.required ? ' (required)' : ' (optional)');
-
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.name = opt.name;
-            input.id = opt.name;
-            input.required = !!opt.required;
-
-            argsContainer.appendChild(label);
-            argsContainer.appendChild(document.createElement('br'));
-            argsContainer.appendChild(input);
-            argsContainer.appendChild(document.createElement('br'));
-            argsContainer.appendChild(document.createElement('br'));
-          });
-        });
-
-        // Function to refresh UUIDs
-        function refreshUUIDs() {
-          const uuidSelect = document.getElementById('uuid');
-          uuidSelect.innerHTML = '<option value="" disabled selected>Select a UUID</option>';
-
-          fetch('/uuids')
-            .then(res => res.json())
-            .then(data => {
-              if (data.uuids && data.uuids.length > 0) {
-                data.uuids.forEach(uuid => {
-                  const opt = document.createElement('option');
-                  opt.value = uuid;
-                  opt.textContent = uuid.slice(0, 8) + '...';
-                  uuidSelect.appendChild(opt);
-                });
-              } else {
+        fetch('/uuids')
+          .then(res => res.json())
+          .then(data => {
+            if (data.uuids && data.uuids.length > 0) {
+              data.uuids.forEach(uuid => {
                 const opt = document.createElement('option');
-                opt.textContent = 'No active UUIDs available';
-                opt.disabled = true;
+                opt.value = uuid;
+                opt.textContent = uuid.slice(0, 8) + '...';
                 uuidSelect.appendChild(opt);
-              }
-            })
-            .catch(error => {
-              console.error('Error fetching UUIDs:', error);
-            });
-        }
-
-        // Initial load of UUIDs
-        refreshUUIDs();
-
-        // Button to refresh UUIDs
-        document.getElementById('refreshUUIDs').addEventListener('click', refreshUUIDs);
-
-        // Submit form
-        document.getElementById('uuidForm').addEventListener('submit', function (event) {
-          event.preventDefault();
-
-          const uuid = document.getElementById('uuid').value;
-          const command = document.getElementById('command').value;
-          const inputs = document.querySelectorAll('#argsContainer input');
-
-          const args = {};
-          inputs.forEach(input => {
-            if (input.value.trim()) {
-              args[input.name] = input.value.trim();
+              });
+            } else {
+              const opt = document.createElement('option');
+              opt.textContent = 'No active UUIDs available';
+              opt.disabled = true;
+              uuidSelect.appendChild(opt);
             }
-          });
-
-          fetch('/send/' + uuid, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              command: command,
-              arguments: args,
-              author: 'WEB_ADMIN'
-            })
           })
-          .then(response => response.text())
-          .then(data => alert('✅ Command Sent: ' + data))
-          .catch(error => alert('❌ Error: ' + error));
+          .catch(error => {
+            console.error('Error fetching UUIDs:', error);
+          });
+      }
+
+      refreshUUIDs();
+      document.getElementById('refreshUUIDs').addEventListener('click', refreshUUIDs);
+
+      document.getElementById('uuidForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const uuid = document.getElementById('uuid').value;
+        const command = document.getElementById('command').value;
+        const inputs = document.querySelectorAll('#argsContainer input');
+
+        const args = {};
+        inputs.forEach(input => {
+          if (input.value.trim()) {
+            args[input.name] = input.value.trim();
+          }
         });
-      </script>
-    </body>
-    </html>
-  `);
-});
+
+        fetch('/send/' + uuid, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            command: command,
+            arguments: args,
+            author: 'WEB_ADMIN'
+          })
+        })
+        .then(response => response.text())
+        .then(data => alert('✅ Command Sent: ' + data))
+        .catch(error => alert('❌ Error: ' + error));
+      });
+    </script>
+  </body>
+  </html>
+`);
 
 app.get('/disconnect/:uuid', (req, res) => {
   const { uuid } = req.params;
