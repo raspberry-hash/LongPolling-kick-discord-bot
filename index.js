@@ -95,6 +95,7 @@ app.get('/uuid-page', (req, res) => {
         <select id="uuid" name="uuid" required>
           <option value="" disabled selected>Select a UUID</option>
         </select>
+        <button type="button" id="refreshUUIDs">Refresh UUIDs</button>
         <br><br>
 
         <label for="command">Select Command:</label>
@@ -150,18 +151,32 @@ app.get('/uuid-page', (req, res) => {
           });
         });
 
-        // Populate UUIDs
-        fetch('/uuids')
-          .then(res => res.json())
-          .then(data => {
-            const uuidSelect = document.getElementById('uuid');
-            data.uuids.forEach(uuid => {
-              const opt = document.createElement('option');
-              opt.value = uuid;
-              opt.textContent = uuid.slice(0, 8) + '...';
-              uuidSelect.appendChild(opt);
-            });
-          });
+        // Function to refresh UUIDs
+        function refreshUUIDs() {
+          const uuidSelect = document.getElementById('uuid');
+          uuidSelect.innerHTML = '';  // Clear the existing options
+
+          // Fetch new UUIDs
+          fetch('/uuids')
+            .then(res => res.json())
+            .then(data => {
+              data.uuids.forEach(uuid => {
+                const opt = document.createElement('option');
+                opt.value = uuid;
+                opt.textContent = uuid.slice(0, 8) + '...'; // Shorten UUID for display
+                uuidSelect.appendChild(opt);
+              });
+            })
+            .catch(error => console.error('Error fetching UUIDs:', error));
+        }
+
+        // Initial UUID population
+        refreshUUIDs();
+
+        // Add event listener for the "Refresh UUIDs" button
+        document.getElementById('refreshUUIDs').addEventListener('click', function() {
+          refreshUUIDs();  // Refresh the UUID list
+        });
 
         // Submit form
         document.getElementById('uuidForm').addEventListener('submit', function (event) {
