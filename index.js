@@ -74,6 +74,7 @@ app.get('/clear-all', (req, res) => {
 app.get('/', (req, res) => {
   res.send("hi");
 });
+
 app.get('/uuid-page', (req, res) => {
   if (!registeredCommands || !registeredCommands.length) {
     return res.status(400).send('❌ No commands have been registered yet.');
@@ -86,45 +87,6 @@ app.get('/uuid-page', (req, res) => {
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Send Command to UUID</title>
-      <style>
-        body {
-          background-color: #121212;
-          color: #ffffff;
-          font-family: Arial, sans-serif;
-          padding: 20px;
-        }
-  
-        h1 {
-          color: #ffffff;
-        }
-  
-        label {
-          color: #dddddd;
-        }
-  
-        select, input, button {
-          background-color: #1e1e1e;
-          color: #ffffff;
-          border: 1px solid #333333;
-          padding: 8px;
-          margin-top: 5px;
-          margin-bottom: 10px;
-          border-radius: 4px;
-        }
-  
-        button {
-          cursor: pointer;
-        }
-  
-        button:hover {
-          background-color: #333333;
-        }
-  
-        option {
-          background-color: #1e1e1e;
-          color: #ffffff;
-        }
-      </style>
     </head>
     <body>
       <h1>Send Command to UUID</h1>
@@ -135,23 +97,25 @@ app.get('/uuid-page', (req, res) => {
         </select>
         <button type="button" id="refreshUUIDs">Refresh UUIDs</button>
         <br><br>
-  
+
         <label for="command">Select Command:</label>
         <select id="command" name="command" required>
           <option value="" disabled selected>Select a command</option>
         </select>
         <br><br>
-  
+
         <div id="argsContainer"></div>
-  
+
         <button type="submit">Send Command</button>
       </form>
-  
+
       <script>
+        // Injected command list from server
         const commands = ${JSON.stringify(registeredCommands)};
+
         const commandSelect = document.getElementById('command');
         const argsContainer = document.getElementById('argsContainer');
-  
+
         commands.forEach(cmd => {
           const option = document.createElement('option');
           option.value = cmd.name;
@@ -159,24 +123,24 @@ app.get('/uuid-page', (req, res) => {
           option.dataset.options = JSON.stringify(cmd.options || []);
           commandSelect.appendChild(option);
         });
-  
+
         commandSelect.addEventListener('change', function () {
           const selected = commandSelect.options[commandSelect.selectedIndex];
           const options = JSON.parse(selected.dataset.options || '[]');
-  
+
           argsContainer.innerHTML = '';
-  
+
           options.forEach(opt => {
             const label = document.createElement('label');
             label.htmlFor = opt.name;
             label.textContent = opt.name + (opt.required ? ' (required)' : ' (optional)');
-  
+
             const input = document.createElement('input');
             input.type = 'text';
             input.name = opt.name;
             input.id = opt.name;
             input.required = !!opt.required;
-  
+
             argsContainer.appendChild(label);
             argsContainer.appendChild(document.createElement('br'));
             argsContainer.appendChild(input);
@@ -184,11 +148,12 @@ app.get('/uuid-page', (req, res) => {
             argsContainer.appendChild(document.createElement('br'));
           });
         });
-  
+
+        // Function to refresh UUIDs
         function refreshUUIDs() {
           const uuidSelect = document.getElementById('uuid');
           uuidSelect.innerHTML = '<option value="" disabled selected>Select a UUID</option>';
-  
+
           fetch('/uuids')
             .then(res => res.json())
             .then(data => {
@@ -210,24 +175,28 @@ app.get('/uuid-page', (req, res) => {
               console.error('Error fetching UUIDs:', error);
             });
         }
-  
+
+        // Initial load of UUIDs
         refreshUUIDs();
+
+        // Button to refresh UUIDs
         document.getElementById('refreshUUIDs').addEventListener('click', refreshUUIDs);
-  
+
+        // Submit form
         document.getElementById('uuidForm').addEventListener('submit', function (event) {
           event.preventDefault();
-  
+
           const uuid = document.getElementById('uuid').value;
           const command = document.getElementById('command').value;
           const inputs = document.querySelectorAll('#argsContainer input');
-  
+
           const args = {};
           inputs.forEach(input => {
             if (input.value.trim()) {
               args[input.name] = input.value.trim();
             }
           });
-  
+
           fetch('/send/' + uuid, {
             method: 'POST',
             headers: {
@@ -246,8 +215,7 @@ app.get('/uuid-page', (req, res) => {
       </script>
     </body>
     </html>
-  `);  
-
+  `);
 });
 
 app.get('/disconnect/:uuid', (req, res) => {
