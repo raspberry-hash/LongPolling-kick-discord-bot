@@ -95,6 +95,7 @@ app.get('/uuid-page', (req, res) => {
         <select id="uuid" name="uuid" required>
           <option value="" disabled selected>Select a UUID</option>
         </select>
+        <button type="button" id="refreshUUIDs">Refresh UUIDs</button>
         <br><br>
 
         <label for="command">Select Command:</label>
@@ -112,7 +113,6 @@ app.get('/uuid-page', (req, res) => {
         // Injected command list from server
         const commands = ${JSON.stringify(registeredCommands)};
 
-        // Populate command dropdown
         const commandSelect = document.getElementById('command');
         const argsContainer = document.getElementById('argsContainer');
 
@@ -124,12 +124,11 @@ app.get('/uuid-page', (req, res) => {
           commandSelect.appendChild(option);
         });
 
-        // Create inputs based on command options
         commandSelect.addEventListener('change', function () {
           const selected = commandSelect.options[commandSelect.selectedIndex];
           const options = JSON.parse(selected.dataset.options || '[]');
 
-          argsContainer.innerHTML = ''; // Clear previous
+          argsContainer.innerHTML = '';
 
           options.forEach(opt => {
             const label = document.createElement('label');
@@ -150,18 +149,38 @@ app.get('/uuid-page', (req, res) => {
           });
         });
 
-        // Populate UUIDs
-        fetch('/uuids')
-          .then(res => res.json())
-          .then(data => {
-            const uuidSelect = document.getElementById('uuid');
-            data.uuids.forEach(uuid => {
-              const opt = document.createElement('option');
-              opt.value = uuid;
-              opt.textContent = uuid.slice(0, 8) + '...';
-              uuidSelect.appendChild(opt);
+        // Function to refresh UUIDs
+        function refreshUUIDs() {
+          const uuidSelect = document.getElementById('uuid');
+          uuidSelect.innerHTML = '<option value="" disabled selected>Select a UUID</option>';
+
+          fetch('/uuids')
+            .then(res => res.json())
+            .then(data => {
+              if (data.uuids && data.uuids.length > 0) {
+                data.uuids.forEach(uuid => {
+                  const opt = document.createElement('option');
+                  opt.value = uuid;
+                  opt.textContent = uuid.slice(0, 8) + '...';
+                  uuidSelect.appendChild(opt);
+                });
+              } else {
+                const opt = document.createElement('option');
+                opt.textContent = 'No active UUIDs available';
+                opt.disabled = true;
+                uuidSelect.appendChild(opt);
+              }
+            })
+            .catch(error => {
+              console.error('Error fetching UUIDs:', error);
             });
-          });
+        }
+
+        // Initial load of UUIDs
+        refreshUUIDs();
+
+        // Button to refresh UUIDs
+        document.getElementById('refreshUUIDs').addEventListener('click', refreshUUIDs);
 
         // Submit form
         document.getElementById('uuidForm').addEventListener('submit', function (event) {
@@ -186,7 +205,7 @@ app.get('/uuid-page', (req, res) => {
             body: JSON.stringify({
               command: command,
               arguments: args,
-              author: 'WEB_AUTH_WL',
+              author: 'WEB_ADMIN'
             })
           })
           .then(response => response.text())
