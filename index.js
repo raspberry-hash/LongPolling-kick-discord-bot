@@ -74,17 +74,22 @@ app.get('/clear-all', (req, res) => {
 app.get('/', (req, res) => {
   res.send("hi");
 });
+
 app.get('/uuid-page', (req, res) => {
+  if (!registeredCommands || !registeredCommands.length) {
+    return res.status(400).send('❌ No commands have been registered yet.');
+  }
+
   res.send(`
     <!DOCTYPE html>
     <html lang="en">
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Select UUID</title>
+      <title>Send Command to UUID</title>
     </head>
     <body>
-      <h1>Select UUID to Send Command</h1>
+      <h1>Send Command to UUID</h1>
       <form id="uuidForm">
         <label for="uuid">Select UUID:</label>
         <select id="uuid" name="uuid" required>
@@ -92,81 +97,103 @@ app.get('/uuid-page', (req, res) => {
         </select>
         <br><br>
 
-        <label for="message">Command Name:</label>
-        <input type="text" id="message" name="message" required>
+        <label for="command">Select Command:</label>
+        <select id="command" name="command" required>
+          <option value="" disabled selected>Select a command</option>
+        </select>
         <br><br>
 
-        <label for="arg1">Argument 1 (optional):</label>
-        <input type="text" id="arg1" name="arg1">
-        <br><br>
-
-        <label for="arg2">Argument 2 (optional):</label>
-        <input type="text" id="arg2" name="arg2">
-        <br><br>
-
-        <label for="arg3">Argument 3 (optional):</label>
-        <input type="text" id="arg3" name="arg3">
-        <br><br>
-
-        <label for="arg4">Argument 4 (optional):</label>
-        <input type="text" id="arg4" name="arg4">
-        <br><br>
+        <div id="argsContainer"></div>
 
         <button type="submit">Send Command</button>
       </form>
 
       <script>
-        // Fetch UUIDs and populate the dropdown
-        fetch('/uuids')
-          .then(response => response.json())
-          .then(data => {
-            const select = document.getElementById('uuid');
-            if (data.uuids.length > 0) {
-              data.uuids.forEach(uuid => {
-                const option = document.createElement('option');
-                option.value = uuid;
-                option.textContent = uuid.slice(0, 8) + '...';
-                select.appendChild(option);
-              });
-            } else {
-              const option = document.createElement('option');
-              option.textContent = 'No active UUIDs';
-              option.disabled = true;
-              select.appendChild(option);
-            }
-          })
-          .catch(error => console.error('Error fetching UUIDs:', error));
+        // Injected command list from server
+        const commands = ${JSON.stringify(registeredCommands)};
 
-        // Handle form submission
-        document.getElementById('uuidForm').addEventListener('submit', function(event) {
+        // Populate command dropdown
+        const commandSelect = document.getElementById('command');
+        const argsContainer = document.getElementById('argsContainer');
+
+        commands.forEach(cmd => {
+          const option = document.createElement('option');
+          option.value = cmd.name;
+          option.textContent = cmd.name;
+          option.dataset.options = JSON.stringify(cmd.options || []);
+          commandSelect.appendChild(option);
+        });
+
+        // Create inputs based on command options
+        commandSelect.addEventListener('change', function () {
+          const selected = commandSelect.options[commandSelect.selectedIndex];
+          const options = JSON.parse(selected.dataset.options || '[]');
+
+          argsContainer.innerHTML = ''; // Clear previous
+
+          options.forEach(opt => {
+            const label = document.createElement('label');
+            label.htmlFor = opt.name;
+            label.textContent = opt.name + (opt.required ? ' (required)' : ' (optional)');
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.name = opt.name;
+            input.id = opt.name;
+            input.required = !!opt.required;
+
+            argsContainer.appendChild(label);
+            argsContainer.appendChild(document.createElement('br'));
+            argsContainer.appendChild(input);
+            argsContainer.appendChild(document.createElement('br'));
+            argsContainer.appendChild(document.createElement('br'));
+          });
+        });
+
+        // Populate UUIDs
+        fetch('/uuids')
+          .then(res => res.json())
+          .then(data => {
+            const uuidSelect = document.getElementById('uuid');
+            data.uuids.forEach(uuid => {
+              const opt = document.createElement('option');
+              opt.value = uuid;
+              opt.textContent = uuid.slice(0, 8) + '...';
+              uuidSelect.appendChild(opt);
+            });
+          });
+
+        // Submit form
+        document.getElementById('uuidForm').addEventListener('submit', function (event) {
           event.preventDefault();
 
           const uuid = document.getElementById('uuid').value;
-          const message = document.getElementById('message').value;
-          const arg1 = document.getElementById('arg1').value;
-          const arg2 = document.getElementById('arg2').value;
-          const arg3 = document.getElementById('arg3').value;
-          const arg4 = document.getElementById('arg4').value;
+          const command = document.getElementById('command').value;
+          const inputs = document.querySelectorAll('#argsContainer input');
 
-          if (!uuid || !message) {
-            alert('Please select a UUID and provide a command name.');
-            return;
-          }
+          const args = {};
+          inputs.forEach(input => {
+            if (input.value.trim()) {
+              args[input.name] = input.value.trim();
+            }
+          });
 
           fetch('/send/' + uuid, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({message: {
-    arguments: arg1,arg2,arg3,arg4,
-    command: message,
-    author: 'rasp'
-}})
+            body: JSON.stringify({
+              message: {
+                command: command,
+                arguments: args,
+                author: 'rasp'
+              }
+            })
           })
           .then(response => response.text())
-          .then(data => alert('Command Sent: ' + data))
-          .catch(error => alert('Error sending command: ' + error));
+          .then(data => alert('✅ Command Sent: ' + data))
+          .catch(error => alert('❌ Error: ' + error));
         });
       </script>
     </body>
@@ -254,6 +281,7 @@ const APP_ID = process.env['appId'];
 const GUILD_ID = process.env['guildId'];
 
 let commandsRegistered = false;  // Track if commands are already registered
+let registeredCommands = []; // parsed command objects
 
 app.post('/updateCommands', async (req, res) => {
     if (commandsRegistered) {
@@ -269,11 +297,13 @@ app.post('/updateCommands', async (req, res) => {
 
   // Map the incoming data to the expected command structure
   const commands = data.map(cmd => ({
-    name: cmd.Name.toLowerCase(),
+    name: cmd.Name.toLowerCase(),   
     description: cmd.Description,
     type: cmd.Type || 1,
     options: cmd.Options || [] // pass options if provided
   }));
+
+  registeredCommands = commands; // Save to parsed commands
 
   const rest = new REST({ version: '10' }).setToken(TOKEN);
 
