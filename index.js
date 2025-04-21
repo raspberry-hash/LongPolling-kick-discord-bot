@@ -187,7 +187,6 @@ app.get('/uuid-page', (req, res) => {
               command: command,
               arguments: args,
               author: 'WEB_AUTH_WL',
-              m: 'hi'
             })
           })
           .then(response => response.text())
@@ -254,24 +253,28 @@ app.get('/poll/:uuid', (req, res) => {
 
 app.post('/send/:uuid', (req, res) => {
   const { uuid } = req.params;
-  const message = req.body.message || "Default message";
 
   if (!clients[uuid] || clients[uuid].length === 0) {
     return res.status(404).send(`No waiting clients for UUID: ${uuid}`);
   }
 
+  // Get the full payload from the client
+  const payload = req.body;
+
+  // Queue the broadcast to all waiting clients
   queues[uuid].push(async () => {
     clients[uuid].forEach(clientRes => {
-      clientRes.json({ message });
+      clientRes.json(payload); // Send the full object
     });
-    clients[uuid] = [];
+    clients[uuid] = []; // Clear the queue
   });
 
+  // Start processing queue if it isn't already
   if (queues[uuid].length === 1) {
     processQueue(uuid);
   }
 
-  res.send(`Message queued for UUID: ${uuid}`);
+  res.send(`Payload queued for UUID: ${uuid}`);
 });
 
 // Slash command registration via POST
